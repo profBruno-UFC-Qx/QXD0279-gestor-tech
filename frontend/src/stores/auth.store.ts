@@ -1,64 +1,34 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import type { User } from '../types/Auth'
-import * as authService from '../services/auth.service'
+import * as authService from '@/services/auth.service'
+import { getAuthToken, removeAuthToken, setAuthToken } from '@/services/auth.storage'
+import type { LoginRequest, User } from '@/types/Auth'
 
-export const useAuthStore = defineStore(
-    'auth',
-    () => {
+export const useAuthStore = defineStore('auth', () => {
+    const user = ref<User | null>(null)
+    const token = ref<string | null>(getAuthToken())
+    const isAuthenticated = computed(() => Boolean(token.value))
 
-        const user = ref<User | null>(null)
+    async function login(credentials: LoginRequest): Promise<void> {
+        const response = await authService.login(credentials)
 
-        const token = ref<string | null>(
-            localStorage.getItem('token')
-        )
-
-
-        async function login(
-            email:string,
-            password:string
-        ){
-
-            const response =
-                await authService.login({
-                    email,
-                    password
-                })
-
-            token.value =
-                response.token
-
-            user.value =
-                response.user
-
-
-            localStorage.setItem(
-                'token',
-                response.token
-            )
-        }
-
-
-        function logout(){
-
-            user.value = null
-
-            token.value = null
-
-            localStorage.removeItem(
-                'token'
-            )
-
-        }
-
-
-        return {
-            user,
-            token,
-            login,
-            logout
-        }
-
+        token.value = response.token
+        user.value = response.user
+        setAuthToken(response.token)
     }
-)
+
+    function logout(): void {
+        user.value = null
+        token.value = null
+        removeAuthToken()
+    }
+
+    return {
+        user,
+        token,
+        isAuthenticated,
+        login,
+        logout,
+    }
+})

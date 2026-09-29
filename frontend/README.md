@@ -1,42 +1,76 @@
-# vue-project
+# Frontend — Gestor Tech
 
-This template should help get you started developing with Vue 3 in Vite.
+Aplicação Vue responsável pela interface do Gestor Tech. A base atual oferece tela de login, estado de autenticação com Pinia, proteção de rotas e cliente HTTP preparado para uma futura API REST.
 
-## Recommended IDE Setup
+## Requisitos
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Node.js `^22.18.0` ou `>=24.12.0`;
+- npm.
 
-## Recommended Browser Setup
+## Configuração
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+Instale as dependências:
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+Crie o arquivo local de ambiente:
 
-```sh
+```bash
+cp .env.example .env
+```
+
+No Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Variável disponível:
+
+| Variável | Descrição | Exemplo |
+|---|---|---|
+| `VITE_API_URL` | URL base da futura API REST | `http://localhost:8080` |
+
+Variáveis prefixadas com `VITE_` são incorporadas ao frontend e não devem armazenar segredos.
+
+## Desenvolvimento
+
+```bash
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+O Vite exibirá no terminal o endereço local da aplicação, normalmente `http://localhost:5173`.
 
-```sh
+## Build de produção
+
+```bash
 npm run build
 ```
+
+Esse comando executa a checagem de tipos e gera os arquivos otimizados em `dist/`.
+
+## Integração futura
+
+O cliente HTTP está centralizado em `src/services/api.ts`. O login espera uma API com:
+
+```text
+POST /auth/login
+```
+
+Resposta esperada:
+
+```json
+{
+  "token": "token-de-acesso",
+  "user": {
+    "id": 1,
+    "name": "Nome do usuário",
+    "email": "usuario@exemplo.com",
+    "role": "MANAGER"
+  }
+}
+```
+
+Até a implementação do backend, tentativas de login apresentarão uma mensagem de indisponibilidade do servidor.

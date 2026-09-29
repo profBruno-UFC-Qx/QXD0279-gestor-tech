@@ -1,27 +1,11 @@
-import type {
-    NavigationGuardNext,
-    RouteLocationNormalized
-} from 'vue-router'
+import type { NavigationGuard } from 'vue-router'
 
+import { getAuthToken } from '@/services/auth.storage'
 
-export function authGuard(
-    to:RouteLocationNormalized,
-    from:RouteLocationNormalized,
-    next:NavigationGuardNext
-){
-
-    const token =
-        localStorage.getItem('token')
-
-
-    if(!token){
-
-        next('/login')
-
-        return
+export const authGuard: NavigationGuard = () => {
+    if (!getAuthToken()) {
+        return { name: 'login' }
     }
 
-
-    next()
-
+    return true
 }
