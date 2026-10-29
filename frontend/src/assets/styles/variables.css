@@ -1,44 +1,118 @@
 :root {
-    /* Cores principais */
-    --color-primary:#2563eb;
-    --color-primary-dark:#1d4ed8;
-    --color-primary-light:#dbeafe;
+    color-scheme: light;
 
-    /* Background */
-    --color-background:#f8fafc;
-    --color-surface:#ffffff;
+    /* Brand */
+    --color-primary: #0e79b2;
+    --color-primary-hover: #0b6899;
+    --color-primary-active: #09577f;
+    --color-primary-soft: rgba(14, 121, 178, 0.09);
+    --color-primary-subtle: rgba(14, 121, 178, 0.055);
+    --color-success: #00a878;
+    --color-success-strong: #007f5b;
+    --color-success-soft: rgba(0, 168, 120, 0.1);
+    --color-warning: #f1d302;
+    --color-warning-strong: #715f00;
+    --color-warning-soft: rgba(241, 211, 2, 0.14);
+    --color-foreground: #1d1e2c;
+    --color-background: #fefdff;
+    --color-white: #ffffff;
 
-    /* Texto */
-    --color-text:#111827;
-    --color-text-secondary:#6b7280;
+    /* Semantic surfaces and text */
+    --color-surface: #ffffff;
+    --color-surface-subtle: #f8fafb;
+    --color-surface-raised: #ffffff;
+    --color-text: var(--color-foreground);
+    --color-text-secondary: #5f6573;
+    --color-text-muted: #858b98;
+    --color-border: #e5e8ed;
+    --color-border-strong: #d5d9e1;
+    --color-border-hover: #b9c0ca;
+    --color-divider: #edf0f3;
+    --color-danger: #b4233f;
+    --color-danger-hover: #961c34;
+    --color-danger-soft: rgba(180, 35, 63, 0.085);
+    --color-overlay: rgba(29, 30, 44, 0.38);
+    --color-primary-border: rgba(14, 121, 178, 0.14);
+    --color-primary-soft-hover: rgba(14, 121, 178, 0.12);
+    --color-success-border: rgba(0, 168, 120, 0.14);
+    --color-warning-border: rgba(113, 95, 0, 0.14);
+    --color-danger-border: rgba(180, 35, 63, 0.18);
+    --color-navbar: rgba(254, 253, 255, 0.96);
+    --color-skeleton: #f0f2f4;
+    --color-skeleton-highlight: #f8f9fa;
 
-    /* Bordas */
-    --color-border:#e5e7eb;
+    /* Backwards-compatible aliases while legacy components are migrated */
+    --color-primary-white: var(--color-surface);
+    --color-text-onyx: var(--color-foreground);
+    --color-accent-sapphire: var(--color-primary);
+    --color-primary-dark: var(--color-primary-hover);
+    --color-primary-light: var(--color-primary-soft);
+    --color-status-brick: var(--color-danger);
 
-    /* Estados */
-    --color-success:#16a34a;
-    --color-warning:#d97706;
-    --color-danger:#dc2626;
+    /* Typography */
+    --font-heading: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Inter Variable', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-family: var(--font-body);
+    --font-size-caption: 0.75rem;
+    --font-size-small: 0.8125rem;
+    --font-size-body: 0.875rem;
+    --font-size-card-title: 0.9375rem;
+    --font-size-section-title: 1.0625rem;
+    --font-size-page-title: clamp(1.5rem, 2.4vw, 1.875rem);
+    --font-size-kpi: clamp(1.75rem, 3vw, 2.25rem);
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
 
-    /* Espaçamentos */
-    --spacing-xs:4px;
-    --spacing-sm:8px;
-    --spacing-md:16px;
-    --spacing-lg:24px;
-    --spacing-xl:32px;
+    /* 4 px spacing scale */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --spacing-xs: var(--space-1);
+    --spacing-sm: var(--space-2);
+    --spacing-md: var(--space-4);
+    --spacing-lg: var(--space-6);
+    --spacing-xl: var(--space-8);
+    --spacing-2xl: var(--space-10);
 
-    /* Bordas */
-    --radius-sm:6px;
-    --radius-md:10px;
-    --radius-lg:16px;
+    /* Shape and elevation */
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 16px;
+    --radius-pill: 999px;
+    --shadow-xs: 0 1px 2px rgba(29, 30, 44, 0.035);
+    --shadow-sm: 0 1px 3px rgba(29, 30, 44, 0.055), 0 1px 2px rgba(29, 30, 44, 0.025);
+    --shadow-md: 0 12px 28px rgba(29, 30, 44, 0.075);
+    --shadow-dialog: 0 24px 64px rgba(29, 30, 44, 0.16);
+    --shadow-primary-sm: 0 1px 2px rgba(14, 121, 178, 0.18);
+    --shadow-primary-md: 0 4px 12px rgba(14, 121, 178, 0.2);
+    --shadow-mobile-nav: 0 -8px 28px rgba(29, 30, 44, 0.06);
 
-    /* Sombras */
-    --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md:0 4px 12px rgba(0,0,0,0.08);
+    /* Motion */
+    --duration-fast: 120ms;
+    --duration-normal: 180ms;
+    --duration-slow: 260ms;
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-colors: color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
 
-    /* Tipografia */
-    --font-family:
-        Inter,
-        Arial,
-        sans-serif;
+    /* Component and layout dimensions */
+    --sidebar-width: 248px;
+    --sidebar-collapsed-width: 80px;
+    --topbar-height: 68px;
+    --control-height-sm: 36px;
+    --control-height: 42px;
+    --control-height-lg: 46px;
+    --content-max-width: 1440px;
+    --breakpoint-mobile: 680px;
+    --breakpoint-tablet: 1024px;
 }

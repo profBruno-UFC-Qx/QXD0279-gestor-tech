@@ -1,51 +1,56 @@
 # Gestor Tech
 
-O Gestor Tech é uma aplicação web em desenvolvimento para apoiar o planejamento e o acompanhamento de projetos de software. Esta versão contém a base do frontend, incluindo autenticação, navegação protegida e estrutura para integração futura com uma API REST.
+Aplicação web para pequenas equipes organizarem projetos, participantes e atividades. A estrutura do repositório segue o MVP descrito em [`PROPOSTA.md`](PROPOSTA.md): autenticação, projetos, equipe, atividades e acompanhamento básico.
 
-O backend, banco de dados e módulos de negócio ainda não fazem parte desta etapa.
+O retrato consolidado do que está implementado, validado e ainda pendente está em [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
 
-## Tecnologias
+## Escopo do MVP
 
-- Vue 3;
-- TypeScript;
-- Vite;
-- Vue Router;
-- Pinia;
-- Axios.
+- cadastro, login e logout;
+- criação e edição de projetos;
+- inclusão e remoção de membros;
+- criação, edição e exclusão de atividades;
+- atualização do status pelo responsável;
+- indicadores de total, concluídas, pendentes, atrasadas e percentual de conclusão.
+
+Riscos, comentários, cronograma independente, relatórios avançados, notificações e anexos não fazem parte desta versão.
 
 ## Estrutura
 
 ```text
 .
-├── frontend/   # Aplicação Vue
-└── backend/    # Reservado para a futura API
+├── frontend/
+│   └── src/
+│       ├── components/     # componentes visuais e navegação do projeto
+│       ├── layouts/        # áreas pública e autenticada
+│       ├── router/         # rotas públicas e protegidas
+│       ├── services/       # persistência e regras da simulação local
+│       ├── stores/         # sessão do usuário
+│       ├── types/          # Usuário, Projeto, MembroProjeto e Atividade
+│       ├── utils/          # rótulos e formatação
+│       └── views/          # autenticação, projetos e atividades
+├── backend/                # espaço reservado para a API Strapi
+├── ESTADO_ATUAL.md
+├── PROPOSTA.md
+└── ENTREGA.md
 ```
+
+O papel do usuário é contextual: ele pode ser gerente de um projeto e membro de outro. Por isso, não existe um campo global de perfil no tipo `User`; as permissões são verificadas com base no projeto atual.
 
 ## Executando o frontend
 
-Pré-requisitos:
-
-- Node.js 22.18 ou superior compatível com `frontend/package.json`;
-- npm.
+Requisitos: Node.js `^22.18.0` ou `>=24.12.0` e npm.
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-No Windows PowerShell, use `Copy-Item .env.example .env` no lugar de `cp`.
-
-A aplicação será disponibilizada no endereço informado pelo Vite, normalmente `http://localhost:5173`.
-
-## Validação para produção
+Para validar a versão de produção:
 
 ```bash
-cd frontend
 npm run build
 ```
 
-O login já possui validação e tratamento de erro, mas somente será concluído com sucesso quando a API REST for implementada e disponibilizar `POST /auth/login`.
-
-> A proposta está em [`PROPOSTA.md`](PROPOSTA.md) e a documentação da entrega final em [`ENTREGA.md`](ENTREGA.md).
+Nesta etapa, o frontend é executável sem API. Autenticação, projetos, equipe e atividades são simulados e persistidos no `localStorage` do navegador. O diretório `backend/` continua reservado à implementação futura da API e não participa da execução atual.

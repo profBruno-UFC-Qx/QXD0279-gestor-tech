@@ -1,15 +1,18 @@
-export type UserRole = 'MANAGER' | 'MEMBER'
-
 export interface User {
     id: number
-    name: string
+    nome: string
     email: string
-    role: UserRole
 }
 
 export interface LoginRequest {
     email: string
-    password: string
+    senha: string
+}
+
+export interface RegisterRequest {
+    nome: string
+    email: string
+    senha: string
 }
 
 export interface AuthResponse {
