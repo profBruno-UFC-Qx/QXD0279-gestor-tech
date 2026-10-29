@@ -1,5 +1,6 @@
 import type { ProjectMember } from '@/types/ProjectMember'
 import { nextLocalId, readLocalDatabase, writeLocalDatabase } from './local-database'
+import { appendProjectEvent } from './project-event'
 
 function nameFromEmail(email: string): string {
     const name = email.split('@')[0]
@@ -58,6 +59,7 @@ export async function addProjectMember(projectId: number, email: string): Promis
     }
 
     database.members.push(member)
+    appendProjectEvent(database, projectId, 'member-added', `adicionou ${user.nome} à equipe.`)
     writeLocalDatabase(database)
     return member
 }
@@ -75,5 +77,6 @@ export async function removeProjectMember(projectId: number, memberId: number): 
             ? { ...activity, responsavelId: null, responsavel: null }
             : activity
     ))
+    appendProjectEvent(database, projectId, 'member-removed', `removeu ${member.usuario.nome} da equipe.`)
     writeLocalDatabase(database)
 }

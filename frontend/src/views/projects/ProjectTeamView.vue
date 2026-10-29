@@ -14,10 +14,12 @@ import LoadingSkeleton from '@/components/ui/LoadingSkeleton.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
+import { listProjectActivities } from '@/services/activity'
 import { getErrorMessage } from '@/services/errors'
 import { addProjectMember, listProjectMembers, removeProjectMember } from '@/services/member'
 import { getProject } from '@/services/project'
 import { useAuthStore } from '@/stores/auth.store'
+import type { Activity } from '@/types/Activity'
 import type { Project } from '@/types/Project'
 import type { ProjectMember } from '@/types/ProjectMember'
 
@@ -26,6 +28,7 @@ const authStore = useAuthStore()
 const projectId = Number(route.params.projectId)
 const project = ref<Project | null>(null)
 const members = ref<ProjectMember[]>([])
+const activities = ref<Activity[]>([])
 const email = ref('')
 const isLoading = ref(true)
 const isSaving = ref(false)
@@ -33,12 +36,28 @@ const isRemoving = ref(false)
 const errorMessage = ref('')
 const memberToRemove = ref<ProjectMember | null>(null)
 const canManage = computed(() => project.value?.gerenteId === authStore.user?.id || project.value?.papelAtual === 'GERENTE')
+const pendingByUser = computed(() => activities.value.reduce((counts, activity) => {
+    if (activity.status !== 'CONCLUIDA' && activity.responsavelId) {
+        counts.set(activity.responsavelId, (counts.get(activity.responsavelId) ?? 0) + 1)
+    }
+    return counts
+}, new Map<number, number>()))
+const maxPending = computed(() => Math.max(1, ...pendingByUser.value.values()))
+
+function pendingFor(userId: number): number {
+    return pendingByUser.value.get(userId) ?? 0
+}
+
+function capacityPercent(userId: number): number {
+    return Math.round((pendingFor(userId) / maxPending.value) * 100)
+}
 
 onMounted(async () => {
     try {
-        const [projectData, memberData] = await Promise.all([getProject(projectId), listProjectMembers(projectId)])
+        const [projectData, memberData, activityData] = await Promise.all([getProject(projectId), listProjectMembers(projectId), listProjectActivities(projectId)])
         project.value = projectData
         members.value = memberData
+        activities.value = activityData
     } catch (error: unknown) {
         errorMessage.value = getErrorMessage(error, 'Não foi possível carregar a equipe.')
     } finally {
@@ -74,6 +93,7 @@ async function confirmRemoveMember(): Promise<void> {
         const removed = memberToRemove.value
         await removeProjectMember(projectId, removed.id)
         members.value = members.value.filter((item) => item.id !== removed.id)
+        activities.value = activities.value.map((activity) => activity.responsavelId === removed.usuarioId ? { ...activity, responsavelId: null, responsavel: null } : activity)
         memberToRemove.value = null
         toast.success('Membro removido', { description: `${removed.usuario.nome} foi removido da equipe.` })
     } catch (error: unknown) {
@@ -102,8 +122,16 @@ async function confirmRemoveMember(): Promise<void> {
             <section class="team-section">
                 <div class="section-heading"><div><h2>Equipe do projeto</h2><p>{{ members.length + 1 }} {{ members.length ? 'pessoas' : 'pessoa' }} com acesso</p></div></div>
                 <div class="member-grid">
-                    <article class="member-card manager-card"><UserAvatar :name="project.gerente?.nome ?? 'Gerente do projeto'" size="lg" /><div class="member-data"><strong>{{ project.gerente?.nome ?? 'Gerente do projeto' }}</strong><span>Responsável pelo projeto</span></div><StatusBadge label="Gerente" tone="primary" /></article>
-                    <article v-for="member in members" :key="member.id" class="member-card"><UserAvatar :name="member.usuario.nome" size="lg" /><div class="member-data"><strong>{{ member.usuario.nome }}</strong><span>{{ member.usuario.email }}</span></div><div class="member-actions"><StatusBadge label="Membro" tone="neutral" /><BaseButton v-if="canManage" variant="ghost" size="sm" :aria-label="`Remover ${member.usuario.nome}`" @click="memberToRemove = member"><template #icon><AppIcon name="trash" :size="16" /></template><span class="remove-label">Remover</span></BaseButton></div></article>
+                    <article class="member-card manager-card">
+                        <UserAvatar :name="project.gerente?.nome ?? 'Gerente do projeto'" size="lg" />
+                        <div class="member-data"><strong>{{ project.gerente?.nome ?? 'Gerente do projeto' }}</strong><span>Responsável pelo projeto</span><div class="capacity"><div><small>Carga atual</small><b>{{ pendingFor(project.gerenteId) }} {{ pendingFor(project.gerenteId) === 1 ? 'tarefa pendente' : 'tarefas pendentes' }}</b></div><span><i :style="{ width: `${capacityPercent(project.gerenteId)}%` }" /></span></div></div>
+                        <StatusBadge label="Gerente" tone="primary" />
+                    </article>
+                    <article v-for="member in members" :key="member.id" class="member-card">
+                        <UserAvatar :name="member.usuario.nome" size="lg" />
+                        <div class="member-data"><strong>{{ member.usuario.nome }}</strong><span>{{ member.usuario.email }}</span><div class="capacity"><div><small>Carga atual</small><b>{{ pendingFor(member.usuarioId) }} {{ pendingFor(member.usuarioId) === 1 ? 'tarefa pendente' : 'tarefas pendentes' }}</b></div><span><i :style="{ width: `${capacityPercent(member.usuarioId)}%` }" /></span></div></div>
+                        <div class="member-actions"><StatusBadge label="Membro" tone="neutral" /><BaseButton v-if="canManage" variant="ghost" size="sm" :aria-label="`Remover ${member.usuario.nome}`" @click="memberToRemove = member"><template #icon><AppIcon name="trash" :size="16" /></template><span class="remove-label">Remover</span></BaseButton></div>
+                    </article>
                 </div>
                 <EmptyState v-if="!members.length" compact icon="team" title="Ainda não há outros membros" description="Adicione pessoas para distribuir as atividades do projeto." />
             </section>
@@ -123,12 +151,18 @@ async function confirmRemoveMember(): Promise<void> {
 .invite-card form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--space-3); }
 .team-section { display: grid; gap: var(--space-4); }
 .member-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-.member-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-xs); }
+.member-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: var(--space-3); padding: var(--space-5); border: 1px solid rgba(231, 234, 240, .65); border-radius: var(--radius-xl); background: var(--color-surface); box-shadow: var(--shadow-sm); }
 .manager-card { border-color: var(--color-primary-border); background: var(--color-primary-subtle); }
 .member-data { display: grid; min-width: 0; }
 .member-data strong, .member-data span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .member-data strong { color: var(--color-foreground); font-size: var(--font-size-body); }
 .member-data span { color: var(--color-text-muted); font-size: var(--font-size-caption); }
+.capacity { display: grid; gap: var(--space-2); margin-top: var(--space-4); }
+.capacity > div { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.capacity small { color: var(--color-text-muted); font-size: .6875rem; }
+.capacity b { color: var(--color-text-secondary); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); }
+.capacity > span { display: block; width: 100%; height: 6px; overflow: hidden; border-radius: var(--radius-pill); background: var(--color-surface-subtle); }
+.capacity i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--color-chart-aqua), var(--color-chart-blue)); transition: width var(--duration-normal) var(--ease-out); }
 .member-actions { display: flex; align-items: center; gap: var(--space-2); }
 .member-actions :deep(.button--ghost) { color: var(--color-danger); }
 @media (max-width: 900px) { .invite-card { grid-template-columns: 1fr; gap: var(--space-5); } }

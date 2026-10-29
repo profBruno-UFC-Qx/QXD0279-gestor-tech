@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+import ProjectActivityFeed from '@/components/projects/ProjectActivityFeed.vue'
+import ProjectBurndownChart from '@/components/projects/ProjectBurndownChart.vue'
 import ProjectTabs from '@/components/projects/ProjectTabs.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
@@ -13,10 +15,12 @@ import StatCard from '@/components/ui/StatCard.vue'
 import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { calculateProjectMetrics, listProjectActivities } from '@/services/activity'
 import { getErrorMessage } from '@/services/errors'
+import { listProjectEvents } from '@/services/project-event'
 import { getProject } from '@/services/project'
 import { useAuthStore } from '@/stores/auth.store'
-import type { ProjectMetrics } from '@/types/Activity'
+import type { Activity, ProjectMetrics } from '@/types/Activity'
 import type { Project } from '@/types/Project'
+import type { ProjectEvent } from '@/types/ProjectEvent'
 import { formatDate, projectStatusLabels } from '@/utils/labels'
 
 const route = useRoute()
@@ -24,15 +28,19 @@ const authStore = useAuthStore()
 const projectId = Number(route.params.projectId)
 const project = ref<Project | null>(null)
 const metrics = ref<ProjectMetrics | null>(null)
+const activities = ref<Activity[]>([])
+const events = ref<ProjectEvent[]>([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 const canManage = computed(() => project.value?.gerenteId === authStore.user?.id || project.value?.papelAtual === 'GERENTE')
 
 onMounted(async () => {
     try {
-        const [projectData, activities] = await Promise.all([getProject(projectId), listProjectActivities(projectId)])
+        const [projectData, activityData, eventData] = await Promise.all([getProject(projectId), listProjectActivities(projectId), listProjectEvents(projectId)])
         project.value = projectData
-        metrics.value = calculateProjectMetrics(activities)
+        activities.value = activityData
+        events.value = eventData
+        metrics.value = calculateProjectMetrics(activityData)
     } catch (error: unknown) {
         errorMessage.value = getErrorMessage(error, 'Não foi possível carregar o projeto.')
     } finally {
@@ -64,10 +72,15 @@ onMounted(async () => {
             </BaseCard>
 
             <div class="metrics-grid">
-                <StatCard label="Total" :value="metrics.total" detail="Atividades cadastradas" icon="activities" />
-                <StatCard label="Concluídas" :value="metrics.concluidas" detail="Entregas finalizadas" icon="check-circle" tone="success" />
-                <StatCard label="Pendentes" :value="metrics.pendentes" detail="A fazer ou em andamento" icon="clock" tone="primary" />
-                <StatCard label="Atrasadas" :value="metrics.atrasadas" detail="Prazo vencido" icon="warning" :tone="metrics.atrasadas ? 'danger' : 'neutral'" />
+                <StatCard label="Total" :value="metrics.total" detail="Atividades cadastradas" icon="activities" :progress="metrics.total ? 100 : 0" />
+                <StatCard label="Concluídas" :value="metrics.concluidas" detail="Entregas finalizadas" icon="check-circle" tone="success" :progress="metrics.percentualConclusao" />
+                <StatCard label="Pendentes" :value="metrics.pendentes" detail="A fazer ou em andamento" icon="clock" tone="primary" :progress="metrics.total ? Math.round((metrics.pendentes / metrics.total) * 100) : 0" />
+                <StatCard label="Atrasadas" :value="metrics.atrasadas" detail="Prazo vencido" icon="warning" :tone="metrics.atrasadas ? 'danger' : 'neutral'" :progress="metrics.total ? Math.round((metrics.atrasadas / metrics.total) * 100) : 0" />
+            </div>
+
+            <div class="insights-grid">
+                <ProjectActivityFeed :events="events" />
+                <ProjectBurndownChart :activities="activities" :start-date="project.dataInicio" :end-date="project.dataFim" />
             </div>
         </template>
     </section>
@@ -88,6 +101,8 @@ onMounted(async () => {
 dt { color: var(--color-text-muted); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); text-transform: uppercase; }
 dd { color: var(--color-foreground); font-weight: var(--font-weight-medium); }
 .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+.insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+@media (max-width: 980px) { .insights-grid { grid-template-columns: 1fr; } }
 @media (max-width: 820px) { .overview-card { grid-template-columns: 1fr; } .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .metrics-grid, .project-details { grid-template-columns: 1fr; } .project-details > div { border-right: 0 !important; border-bottom: 1px solid var(--color-divider); } .project-details > div:last-child { border-bottom: 0; } }
 </style>

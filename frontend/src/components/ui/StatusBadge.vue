@@ -32,11 +32,11 @@ const resolvedTone = computed<Tone>(() => {
 </template>
 
 <style scoped>
-.badge { display: inline-flex; width: fit-content; min-height: 26px; align-items: center; gap: 6px; padding: 4px 9px; border: 1px solid transparent; border-radius: var(--radius-pill); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); line-height: 1; white-space: nowrap; }
+.badge { display: inline-flex; width: fit-content; min-height: 28px; align-items: center; gap: 6px; padding: 5px 10px; border: 0; border-radius: var(--radius-pill); font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); line-height: 1; white-space: nowrap; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.badge--neutral { border-color: var(--color-border); background: var(--color-surface-subtle); color: var(--color-text-secondary); }
-.badge--primary { border-color: var(--color-primary-border); background: var(--color-primary-soft); color: var(--color-primary-active); }
-.badge--success { border-color: var(--color-success-border); background: var(--color-success-soft); color: var(--color-success-strong); }
-.badge--warning { border-color: var(--color-warning-border); background: var(--color-warning-soft); color: var(--color-warning-strong); }
-.badge--danger { border-color: var(--color-danger-border); background: var(--color-danger-soft); color: var(--color-danger); }
+.badge--neutral { background: #eef1f5; color: #4f5a6c; }
+.badge--primary { background: var(--color-primary-soft); color: var(--color-primary-active); }
+.badge--success { background: var(--color-success-soft); color: var(--color-success-strong); }
+.badge--warning { background: var(--color-warning-soft); color: var(--color-warning-strong); }
+.badge--danger { background: var(--color-danger-soft); color: #98455a; }
 </style>

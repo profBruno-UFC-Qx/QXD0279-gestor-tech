@@ -6,7 +6,7 @@ import { priorityLabels } from '@/utils/labels'
 defineProps<{ priority: ActivityPriority }>()
 
 const tones = {
-    BAIXA: 'neutral',
+    BAIXA: 'success',
     MEDIA: 'warning',
     ALTA: 'danger',
 } as const

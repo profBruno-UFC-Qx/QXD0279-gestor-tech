@@ -7,7 +7,7 @@
 </template>
 
 <style scoped>
-.filter-bar { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-xs); }
+.filter-bar { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid rgba(231, 234, 240, .7); border-radius: var(--radius-xl); background: var(--color-surface); box-shadow: var(--shadow-sm); }
 .search-slot { min-width: 220px; flex: 1; }
 .search-slot :deep(.search) { width: min(100%, 420px); }
 .filters, .actions { display: flex; align-items: center; gap: var(--space-2); }

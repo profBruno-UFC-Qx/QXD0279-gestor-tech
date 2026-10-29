@@ -3,7 +3,6 @@ import { createPinia } from 'pinia'
 import router from './router'
 
 import '@fontsource-variable/inter'
-import '@fontsource-variable/plus-jakarta-sans'
 import 'vue-sonner/style.css'
 import './assets/styles/global.css'
 

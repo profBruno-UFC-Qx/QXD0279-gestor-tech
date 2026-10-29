@@ -52,11 +52,19 @@ const editingId = ref<number | null>(null)
 const activityToDelete = ref<Activity | null>(null)
 const errorMessage = ref('')
 const search = ref('')
+const viewMode = ref<'list' | 'kanban'>('list')
+const draggedActivityId = ref<number | null>(null)
+const dragOverStatus = ref<ActivityStatus | null>(null)
 const statusFilter = ref<'TODOS' | ActivityStatus | 'ATRASADA'>('TODOS')
 const priorityFilter = ref<'TODAS' | ActivityPriority>('TODAS')
 const canManage = computed(() => project.value?.gerenteId === authStore.user?.id || project.value?.papelAtual === 'GERENTE')
 const assignableMembers = computed(() => members.value.filter((member) => member.usuarioId !== project.value?.gerenteId))
 const form = reactive<ActivityPayload>({ titulo: '', descricao: '', prioridade: 'MEDIA', status: 'A_FAZER', prazo: '', responsavelId: null })
+const kanbanColumns: Array<{ status: ActivityStatus; label: string }> = [
+    { status: 'A_FAZER', label: 'A fazer' },
+    { status: 'EM_ANDAMENTO', label: 'Em andamento' },
+    { status: 'CONCLUIDA', label: 'Concluída' },
+]
 
 const filteredActivities = computed(() => {
     const term = search.value.trim().toLocaleLowerCase('pt-BR')
@@ -97,6 +105,22 @@ async function consumeCreateQuery(): Promise<void> {
     }
 }
 
+async function consumeActivityQuery(): Promise<void> {
+    const activityId = Number(route.query.atividade)
+    if (!Number.isInteger(activityId) || activityId <= 0) return
+    const activity = activities.value.find((item) => item.id === activityId)
+    if (activity) {
+        if (canManage.value) openEditForm(activity)
+        else {
+            search.value = activity.titulo
+            statusFilter.value = 'TODOS'
+            priorityFilter.value = 'TODAS'
+        }
+    }
+    const { atividade: _atividade, ...query } = route.query
+    await router.replace({ name: 'project-activities', params: { projectId }, query })
+}
+
 onMounted(async () => {
     try {
         const [projectData, activityData, memberData] = await Promise.all([getProject(projectId), listProjectActivities(projectId), listProjectMembers(projectId)])
@@ -104,6 +128,7 @@ onMounted(async () => {
         activities.value = activityData
         members.value = memberData
         await consumeCreateQuery()
+        await consumeActivityQuery()
     } catch (error: unknown) {
         errorMessage.value = getErrorMessage(error, 'Não foi possível carregar as atividades.')
     } finally {
@@ -112,6 +137,7 @@ onMounted(async () => {
 })
 
 watch(() => route.query.nova, async () => { if (!isLoading.value) await consumeCreateQuery() })
+watch(() => route.query.atividade, async () => { if (!isLoading.value) await consumeActivityQuery() })
 
 async function handleSave(): Promise<void> {
     if (!form.titulo.trim() || !form.prazo) {
@@ -141,6 +167,31 @@ async function handleSave(): Promise<void> {
 
 function canUpdateStatus(activity: Activity): boolean {
     return canManage.value || activity.responsavelId === authStore.user?.id
+}
+
+function activitiesForStatus(status: ActivityStatus): Activity[] {
+    return filteredActivities.value.filter((activity) => activity.status === status)
+}
+
+function startDragging(activity: Activity, event: DragEvent): void {
+    if (!canUpdateStatus(activity)) return
+    draggedActivityId.value = activity.id
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.setData('text/plain', String(activity.id))
+    }
+}
+
+function stopDragging(): void {
+    draggedActivityId.value = null
+    dragOverStatus.value = null
+}
+
+async function dropActivity(status: ActivityStatus): Promise<void> {
+    const activity = activities.value.find((item) => item.id === draggedActivityId.value)
+    stopDragging()
+    if (!activity || activity.status === status || !canUpdateStatus(activity)) return
+    await handleStatusChange(activity, status)
 }
 
 async function handleStatusChange(activity: Activity, status: ActivityStatus): Promise<void> {
@@ -191,9 +242,10 @@ async function confirmDelete(): Promise<void> {
                     <label><span class="sr-only">Filtrar por status</span><select v-model="statusFilter"><option value="TODOS">Todos os status</option><option value="A_FAZER">A fazer</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDA">Concluídas</option><option value="ATRASADA">Atrasadas</option></select></label>
                     <label><span class="sr-only">Filtrar por prioridade</span><select v-model="priorityFilter"><option value="TODAS">Todas as prioridades</option><option value="BAIXA">Baixa</option><option value="MEDIA">Média</option><option value="ALTA">Alta</option></select></label>
                 </template>
+                <template #actions><div class="view-toggle" aria-label="Modo de visualização"><button type="button" :class="{ active: viewMode === 'list' }" :aria-pressed="viewMode === 'list'" @click="viewMode = 'list'"><AppIcon name="activities" :size="16" />Lista</button><button type="button" :class="{ active: viewMode === 'kanban' }" :aria-pressed="viewMode === 'kanban'" @click="viewMode = 'kanban'"><AppIcon name="dashboard" :size="16" />Kanban</button></div></template>
             </FilterBar>
 
-            <AppDataTable label="Atividades do projeto" :empty="filteredActivities.length === 0">
+            <AppDataTable v-if="viewMode === 'list'" label="Atividades do projeto" :empty="filteredActivities.length === 0">
                 <template #header><SectionHeader title="Atividades" :description="`${filteredActivities.length} de ${activities.length} exibidas`" /></template>
                 <template #default>
                     <thead><tr><th>Atividade</th><th>Responsável</th><th>Prioridade</th><th>Prazo</th><th>Status</th><th><span class="sr-only">Ações</span></th></tr></thead>
@@ -203,13 +255,44 @@ async function confirmDelete(): Promise<void> {
                             <td><div class="person"><UserAvatar :name="activity.responsavel?.nome ?? 'Sem responsável'" size="sm" /><span>{{ activity.responsavel?.nome ?? 'Não definido' }}</span></div></td>
                             <td><PriorityBadge :priority="activity.prioridade" /></td>
                             <td><span class="deadline" :class="{ overdue: isActivityOverdue(activity) }">{{ formatDate(activity.prazo) }}</span></td>
-                            <td><label class="status-select"><span class="sr-only">Status de {{ activity.titulo }}</span><select :value="activity.status" :disabled="!canUpdateStatus(activity)" @change="handleStatusChange(activity, ($event.target as HTMLSelectElement).value as ActivityStatus)"><option v-for="(label, status) in activityStatusLabels" :key="status" :value="status">{{ label }}</option></select></label></td>
+                            <td><label class="status-select" :class="`status-select--${activity.status.toLowerCase()}`"><span class="sr-only">Status de {{ activity.titulo }}</span><select :value="activity.status" :disabled="!canUpdateStatus(activity)" @change="handleStatusChange(activity, ($event.target as HTMLSelectElement).value as ActivityStatus)"><option v-for="(label, status) in activityStatusLabels" :key="status" :value="status">{{ label }}</option></select></label></td>
                             <td><div v-if="canManage" class="row-actions"><BaseButton variant="ghost" size="sm" :aria-label="`Editar ${activity.titulo}`" @click="openEditForm(activity)"><template #icon><AppIcon name="pencil" :size="16" /></template></BaseButton><BaseButton variant="ghost" size="sm" :aria-label="`Excluir ${activity.titulo}`" class="delete-button" @click="activityToDelete = activity"><template #icon><AppIcon name="trash" :size="16" /></template></BaseButton></div></td>
                         </tr>
                     </tbody>
                 </template>
                 <template #empty><EmptyState compact :icon="activities.length ? 'search' : 'activities'" :title="activities.length ? 'Nenhuma atividade encontrada' : 'Nenhuma atividade cadastrada'" :description="activities.length ? 'Ajuste a busca ou os filtros.' : 'Crie a primeira atividade para iniciar o planejamento desta entrega.'"><template v-if="canManage && !activities.length" #actions><BaseButton @click="openCreateForm">Criar atividade</BaseButton></template></EmptyState></template>
             </AppDataTable>
+
+            <section v-else class="kanban-board" aria-label="Quadro Kanban de atividades">
+                <article
+                    v-for="column in kanbanColumns"
+                    :key="column.status"
+                    class="kanban-column"
+                    :class="{ 'kanban-column--over': dragOverStatus === column.status }"
+                    @dragover.prevent="dragOverStatus = column.status"
+                    @dragleave.self="dragOverStatus = null"
+                    @drop.prevent="dropActivity(column.status)"
+                >
+                    <header><div><span class="column-dot" :class="`column-dot--${column.status.toLowerCase()}`" /><h2>{{ column.label }}</h2></div><strong>{{ activitiesForStatus(column.status).length }}</strong></header>
+                    <div class="kanban-list">
+                        <article
+                            v-for="activity in activitiesForStatus(column.status)"
+                            :key="activity.id"
+                            class="kanban-card"
+                            :class="{ 'kanban-card--dragging': draggedActivityId === activity.id, 'kanban-card--draggable': canUpdateStatus(activity) }"
+                            :draggable="canUpdateStatus(activity)"
+                            @dragstart="startDragging(activity, $event)"
+                            @dragend="stopDragging"
+                        >
+                            <div class="kanban-card-top"><PriorityBadge :priority="activity.prioridade" /><BaseButton v-if="canManage" variant="ghost" size="sm" :aria-label="`Editar ${activity.titulo}`" @click="openEditForm(activity)"><template #icon><AppIcon name="pencil" :size="15" /></template></BaseButton></div>
+                            <div><h3>{{ activity.titulo }}</h3><p>{{ activity.descricao || 'Sem descrição.' }}</p></div>
+                            <div class="kanban-meta"><span :class="{ overdue: isActivityOverdue(activity) }"><AppIcon name="calendar" :size="14" />{{ formatDate(activity.prazo) }}</span><span><UserAvatar :name="activity.responsavel?.nome ?? 'Sem responsável'" size="sm" />{{ activity.responsavel?.nome ?? 'Não definido' }}</span></div>
+                            <label v-if="canUpdateStatus(activity)" class="kanban-status"><span class="sr-only">Mover {{ activity.titulo }}</span><select :value="activity.status" @change="handleStatusChange(activity, ($event.target as HTMLSelectElement).value as ActivityStatus)"><option v-for="(label, status) in activityStatusLabels" :key="status" :value="status">Mover para {{ label }}</option></select></label>
+                        </article>
+                        <div v-if="!activitiesForStatus(column.status).length" class="column-empty">Solte uma atividade aqui</div>
+                    </div>
+                </article>
+            </section>
         </template>
         <EmptyState v-else icon="alert-triangle" title="Atividades indisponíveis" :description="errorMessage || 'Não foi possível encontrar este projeto.'" />
 
@@ -236,8 +319,41 @@ async function confirmDelete(): Promise<void> {
 .activity-title :deep(.badge) { margin-top: 3px; }
 .person { display: flex; min-width: 150px; align-items: center; gap: var(--space-2); color: var(--color-foreground); }
 .deadline { white-space: nowrap; }.deadline.overdue { color: var(--color-danger); font-weight: var(--font-weight-semibold); }
-.status-select select { min-width: 138px; min-height: var(--control-height-sm); padding-block: 7px; font-size: var(--font-size-small); }
+.status-select select { min-width: 138px; min-height: 34px; padding: 7px 30px 7px 12px; border: 0; border-radius: var(--radius-pill); background-color: transparent; color: inherit; font-size: var(--font-size-small); font-weight: var(--font-weight-semibold); }
+.status-select { display: inline-flex; border-radius: var(--radius-pill); }
+.status-select--a_fazer { background: #eef1f5; color: #4f5a6c; }
+.status-select--em_andamento { background: var(--color-primary-soft); color: var(--color-primary-active); }
+.status-select--concluida { background: var(--color-success-soft); color: var(--color-success-strong); }
+.view-toggle { display: inline-flex; padding: 3px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface-subtle); }
+.view-toggle button { display: inline-flex; min-height: 32px; align-items: center; gap: 6px; padding: 6px 10px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--color-text-secondary); cursor: pointer; font-size: var(--font-size-caption); font-weight: var(--font-weight-semibold); }
+.view-toggle button.active { background: var(--color-surface); color: var(--color-primary); box-shadow: var(--shadow-xs); }
+.kanban-board { display: grid; grid-template-columns: repeat(3, minmax(260px, 1fr)); align-items: start; gap: var(--space-4); overflow-x: auto; padding-bottom: var(--space-2); }
+.kanban-column { min-height: 420px; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-xl); background: rgba(244, 246, 248, .78); transition: border-color var(--duration-fast) var(--ease-standard), background var(--duration-fast) var(--ease-standard); }
+.kanban-column--over { border-color: var(--color-primary); background: var(--color-primary-subtle); }
+.kanban-column > header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-1) var(--space-4); }
+.kanban-column > header div { display: flex; align-items: center; gap: var(--space-2); }
+.kanban-column > header h2 { font-size: var(--font-size-card-title); }
+.kanban-column > header strong { display: grid; min-width: 25px; height: 25px; place-items: center; border-radius: var(--radius-pill); background: var(--color-surface); color: var(--color-text-secondary); font-size: var(--font-size-caption); }
+.column-dot { width: 8px; height: 8px; border-radius: 50%; }
+.column-dot--a_fazer { background: var(--color-text-muted); }
+.column-dot--em_andamento { background: var(--color-chart-blue); }
+.column-dot--concluida { background: var(--color-chart-aqua); }
+.kanban-list { display: grid; gap: var(--space-3); }
+.kanban-card { display: grid; gap: var(--space-3); padding: var(--space-4); border: 1px solid rgba(231, 234, 240, .8); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-sm); transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard); }
+.kanban-card--draggable { cursor: grab; }
+.kanban-card--draggable:active { cursor: grabbing; }
+.kanban-card--dragging { opacity: .42; transform: rotate(1deg) scale(.98); }
+.kanban-card-top { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.kanban-card-top :deep(.button) { width: 32px; min-height: 32px; padding: 0; }
+.kanban-card h3 { font-size: var(--font-size-card-title); }
+.kanban-card p { display: -webkit-box; margin-top: var(--space-1); overflow: hidden; color: var(--color-text-secondary); font-size: var(--font-size-caption); -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.kanban-meta { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: 1px solid var(--color-divider); }
+.kanban-meta > span { display: flex; min-width: 0; align-items: center; gap: var(--space-2); overflow: hidden; color: var(--color-text-muted); font-size: var(--font-size-caption); text-overflow: ellipsis; white-space: nowrap; }
+.kanban-meta > span.overdue { color: var(--color-danger); font-weight: var(--font-weight-semibold); }
+.kanban-status select { min-height: 34px; padding-block: 6px; border-color: var(--color-border); background-color: var(--color-surface-subtle); color: var(--color-text-secondary); font-size: var(--font-size-caption); font-weight: var(--font-weight-medium); }
+.column-empty { display: grid; min-height: 84px; place-items: center; padding: var(--space-4); border: 1px dashed var(--color-border-strong); border-radius: var(--radius-lg); color: var(--color-text-muted); font-size: var(--font-size-caption); text-align: center; }
 .row-actions { display: flex; justify-content: flex-end; gap: 2px; }.row-actions :deep(.button) { width: 34px; padding: 0; }.delete-button { color: var(--color-danger) !important; }
 .activity-form { display: grid; gap: var(--space-5); }.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
-@media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .kanban-board { grid-template-columns: repeat(3, minmax(280px, 84vw)); } }
+@media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } .view-toggle button { padding-inline: 8px; } }
 </style>

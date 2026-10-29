@@ -13,7 +13,7 @@ const breadcrumbs = computed(() => {
 })
 
 const contextualAction = computed(() => {
-    if (route.name === 'projects') return { label: 'Novo projeto', name: 'project-create', params: {}, query: {} }
+    if (route.name === 'projects') return { label: 'Novo projeto', name: 'projects', params: {}, query: { novo: '1' } }
     if (route.name === 'project-activities' && route.params.projectId) {
         return { label: 'Nova atividade', name: 'project-activities', params: { projectId: route.params.projectId }, query: { nova: '1' } }
     }
@@ -23,7 +23,7 @@ const contextualAction = computed(() => {
 
 <template>
     <header class="navbar">
-        <div class="mobile-brand"><span class="brand-dot" />Gestor Tech</div>
+        <div class="mobile-brand"><img src="/Logo%20Gestor%20Tech%20com%20Foguete%20Branco.png" alt="Gestor Tech"></div>
         <nav class="breadcrumbs" aria-label="Breadcrumb">
             <template v-for="(item, index) in breadcrumbs" :key="`${item}-${index}`">
                 <AppIcon v-if="index" name="chevron-right" :size="14" />
@@ -56,8 +56,8 @@ const contextualAction = computed(() => {
 @media (max-width: 680px) {
     .navbar { min-height: 60px; padding-inline: var(--space-4); }
     .breadcrumbs { display: none; }
-    .mobile-brand { display: flex; align-items: center; gap: var(--space-2); font-family: var(--font-heading); font-size: var(--font-size-card-title); font-weight: var(--font-weight-bold); }
-    .brand-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--color-primary); box-shadow: 0 0 0 4px var(--color-primary-soft); }
+    .mobile-brand { display: flex; align-items: center; padding: 4px 8px; border-radius: var(--radius-sm); background: var(--color-sidebar); }
+    .mobile-brand img { display: block; width: 120px; height: auto; }
     .mobile-user { display: block; }
     .contextual-action span { display: none; }
     .contextual-action { width: 38px; padding: 0; justify-content: center; }

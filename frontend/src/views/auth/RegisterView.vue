@@ -42,7 +42,7 @@ async function handleRegister(): Promise<void> {
 
 <template>
     <div class="auth-panel">
-        <div class="mobile-brand"><span class="brand-mark"><span /><span /><span /></span>Gestor <strong>Tech</strong></div>
+        <div class="mobile-brand"><img src="/Logo%20Gestor%20Tech%20com%20Foguete%20Branco.png" alt="Gestor Tech"></div>
         <header><span class="eyebrow">Comece agora</span><h1>Crie sua conta</h1><p>Organize projetos e entregas em um único workspace.</p></header>
         <div class="local-notice"><AppIcon name="alert-triangle" :size="17" /><span>Conta e dados serão simulados e armazenados apenas neste navegador.</span></div>
         <form class="auth-form" novalidate @submit.prevent="handleRegister">
@@ -57,7 +57,7 @@ async function handleRegister(): Promise<void> {
 </template>
 
 <style scoped>
-.auth-panel { width: min(100%, 520px); }.mobile-brand { display: none; align-items: center; gap: var(--space-2); margin-bottom: var(--space-8); font-family: var(--font-heading); font-weight: var(--font-weight-semibold); }.mobile-brand strong { color: var(--color-primary); }.brand-mark { display: flex; width: 30px; height: 30px; align-items: flex-end; justify-content: center; gap: 3px; padding: 7px; border-radius: var(--radius-md); background: var(--color-primary); }.brand-mark span { width: 3px; border-radius: 4px; background: var(--color-white); }.brand-mark span:nth-child(1) { height: 7px; }.brand-mark span:nth-child(2) { height: 14px; }.brand-mark span:nth-child(3) { height: 10px; }
+.auth-panel { width: min(100%, 520px); }.mobile-brand { display: none; width: fit-content; align-items: center; padding: 4px 8px; margin-bottom: var(--space-8); border-radius: var(--radius-sm); background: var(--color-sidebar); }.mobile-brand img { display: block; width: 150px; height: auto; }
 header { margin-bottom: var(--space-5); }.eyebrow { display: block; margin-bottom: var(--space-2); color: var(--color-primary); font-size: var(--font-size-caption); font-weight: var(--font-weight-bold); letter-spacing: .08em; text-transform: uppercase; }h1 { font-size: clamp(1.65rem, 4vw, 2rem); }header p { margin-top: var(--space-2); color: var(--color-text-secondary); }
 .local-notice { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-3); margin-bottom: var(--space-5); border: 1px solid var(--color-warning-border); border-radius: var(--radius-md); background: var(--color-warning-soft); color: var(--color-warning-strong); font-size: var(--font-size-caption); }.local-notice svg { flex: 0 0 auto; margin-top: 1px; }
 .auth-form { display: grid; gap: var(--space-4); }.password-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }.submit-button { width: 100%; margin-top: var(--space-1); }.auth-switch { margin-top: var(--space-5); color: var(--color-text-secondary); text-align: center; }.auth-switch a { color: var(--color-primary); font-weight: var(--font-weight-semibold); }

@@ -55,7 +55,7 @@ const router = createRouter({
                     path: 'projetos/novo',
                     name: 'project-create',
                     meta: { title: 'Novo projeto', breadcrumbs: ['Projetos', 'Novo projeto'] },
-                    component: () => import('@/views/projects/ProjectFormView.vue'),
+                    redirect: { name: 'projects', query: { novo: '1' } },
                 },
                 {
                     path: 'projetos/:projectId',

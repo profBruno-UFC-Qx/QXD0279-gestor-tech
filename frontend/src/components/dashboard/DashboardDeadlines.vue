@@ -28,7 +28,7 @@ defineProps<{ activities: Activity[]; projectId: number }>()
 </template>
 
 <style scoped>
-.deadline-card { display: grid; align-content: start; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-xs); }
+.deadline-card { display: grid; align-content: start; gap: var(--space-4); padding: var(--space-5); border: 1px solid rgba(231, 234, 240, .65); border-radius: var(--radius-xl); background: var(--color-surface); box-shadow: var(--shadow-sm); }
 .deadline-list { display: grid; }
 .deadline-list li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--color-divider); }
 .calendar { display: grid; width: 34px; height: 34px; place-items: center; border-radius: var(--radius-md); background: var(--color-primary-soft); color: var(--color-primary); }

@@ -1,5 +1,6 @@
 import type { Project, ProjectPayload } from '@/types/Project'
 import { getAuthUser } from './auth.storage'
+import { appendProjectEvent } from './project-event'
 import {
     nextLocalId,
     readLocalDatabase,
@@ -53,6 +54,7 @@ export async function createProject(data: ProjectPayload): Promise<Project> {
     }
 
     database.projects.push(project)
+    appendProjectEvent(database, project.id, 'project-created', `criou o projeto “${project.nome}”.`)
     writeLocalDatabase(database)
     return hydrateProject(project, database)
 }
@@ -69,6 +71,7 @@ export async function updateProject(projectId: number, data: ProjectPayload): Pr
     }
 
     database.projects[projectIndex] = project
+    appendProjectEvent(database, projectId, 'project-updated', `atualizou as informações do projeto “${project.nome}”.`)
     writeLocalDatabase(database)
     return hydrateProject(project, database)
 }

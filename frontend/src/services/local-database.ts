@@ -2,6 +2,7 @@ import type { Activity } from '@/types/Activity'
 import type { User } from '@/types/Auth'
 import type { Project } from '@/types/Project'
 import type { ProjectMember } from '@/types/ProjectMember'
+import type { ProjectEvent } from '@/types/ProjectEvent'
 
 const DATABASE_KEY = 'gestor-tech:local-database:v1'
 
@@ -10,6 +11,7 @@ export interface LocalDatabase {
     projects: Project[]
     members: ProjectMember[]
     activities: Activity[]
+    projectEvents: ProjectEvent[]
 }
 
 function createInitialDatabase(): LocalDatabase {
@@ -69,7 +71,14 @@ function createInitialDatabase(): LocalDatabase {
         },
     ]
 
-    return { users, projects, members, activities }
+    const projectEvents: ProjectEvent[] = [
+        { id: 1, projectId: 1, actorId: 2, actorName: 'Ana Lima', type: 'activity-status', message: 'moveu “Mapear a jornada do usuário” para Concluída.', createdAt: '2026-10-28T17:30:00.000Z' },
+        { id: 2, projectId: 1, actorId: 1, actorName: 'Usuário de demonstração', type: 'activity-updated', message: 'atualizou o prazo de “Construir o dashboard inicial”.', createdAt: '2026-10-27T14:15:00.000Z' },
+        { id: 3, projectId: 1, actorId: 3, actorName: 'Bruno Costa', type: 'activity-status', message: 'moveu “Revisar componentes responsivos” para A fazer.', createdAt: '2026-10-25T11:00:00.000Z' },
+        { id: 4, projectId: 1, actorId: 1, actorName: 'Usuário de demonstração', type: 'member-added', message: 'adicionou Ana Lima e Bruno Costa à equipe.', createdAt: '2026-10-02T13:00:00.000Z' },
+    ]
+
+    return { users, projects, members, activities, projectEvents }
 }
 
 function getStorage(): Storage | null {
@@ -94,6 +103,27 @@ export function readLocalDatabase(): LocalDatabase {
         try {
             const database: unknown = JSON.parse(storedDatabase)
             if (isLocalDatabase(database)) {
+                let shouldWrite = false
+                if (!Array.isArray(database.projectEvents)) {
+                    database.projectEvents = database.activities.slice(0, 6).map((activity, index) => {
+                        const project = database.projects.find((item) => item.id === activity.projetoId)
+                        const actorId = activity.responsavelId ?? project?.gerenteId ?? null
+                        const actor = database.users.find((user) => user.id === actorId)
+                        const isCompleted = activity.status === 'CONCLUIDA'
+                        return {
+                            id: index + 1,
+                            projectId: activity.projetoId,
+                            actorId,
+                            actorName: actor?.nome ?? 'Sistema',
+                            type: isCompleted ? 'activity-status' as const : 'activity-updated' as const,
+                            message: isCompleted
+                                ? `moveu “${activity.titulo}” para Concluída.`
+                                : `atualizou a atividade “${activity.titulo}”.`,
+                            createdAt: new Date(Date.now() - (index * 86_400_000)).toISOString(),
+                        }
+                    })
+                    shouldWrite = true
+                }
                 const defaultProject = database.projects.find((project) => (
                     project.id === 1 && project.nome === 'Portal do Cliente'
                 ))
@@ -101,8 +131,10 @@ export function readLocalDatabase(): LocalDatabase {
                 if (defaultProject) {
                     defaultProject.nome = 'Desenvolvimento de Software'
                     defaultProject.descricao = 'Planeamento e acompanhamento das entregas da nova plataforma digital.'
-                    writeLocalDatabase(database)
+                    shouldWrite = true
                 }
+
+                if (shouldWrite) writeLocalDatabase(database)
 
                 return database
             }

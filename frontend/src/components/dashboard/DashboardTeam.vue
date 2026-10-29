@@ -30,7 +30,7 @@ const people = computed(() => [
 </template>
 
 <style scoped>
-.team-card { display: grid; align-content: start; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-xs); }
+.team-card { display: grid; align-content: start; gap: var(--space-4); padding: var(--space-5); border: 1px solid rgba(231, 234, 240, .65); border-radius: var(--radius-xl); background: var(--color-surface); box-shadow: var(--shadow-sm); }
 .icon-link { display: grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-primary); transition: var(--transition-colors); }
 .icon-link:hover { border-color: var(--color-primary-border); background: var(--color-primary-soft); }
 .people-list { display: grid; }

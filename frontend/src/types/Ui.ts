@@ -15,6 +15,7 @@ export type IconName =
     | 'mail'
     | 'menu'
     | 'more-horizontal'
+    | 'more-vertical'
     | 'pencil'
     | 'plus'
     | 'projects'

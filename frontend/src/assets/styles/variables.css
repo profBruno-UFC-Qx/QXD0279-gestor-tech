@@ -2,44 +2,49 @@
     color-scheme: light;
 
     /* Brand */
-    --color-primary: #0e79b2;
-    --color-primary-hover: #0b6899;
-    --color-primary-active: #09577f;
-    --color-primary-soft: rgba(14, 121, 178, 0.09);
-    --color-primary-subtle: rgba(14, 121, 178, 0.055);
-    --color-success: #00a878;
-    --color-success-strong: #007f5b;
-    --color-success-soft: rgba(0, 168, 120, 0.1);
-    --color-warning: #f1d302;
-    --color-warning-strong: #715f00;
-    --color-warning-soft: rgba(241, 211, 2, 0.14);
-    --color-foreground: #1d1e2c;
-    --color-background: #fefdff;
+    --color-primary: #4567d7;
+    --color-primary-hover: #3858bd;
+    --color-primary-active: #2e489a;
+    --color-primary-soft: #eaf0ff;
+    --color-primary-subtle: #f3f6ff;
+    --color-success: #56b8aa;
+    --color-success-strong: #237b70;
+    --color-success-soft: #e5f6f3;
+    --color-warning: #9b86d7;
+    --color-warning-strong: #5f4b98;
+    --color-warning-soft: #f0ecfb;
+    --color-foreground: #182033;
+    --color-background: #f8f9fa;
     --color-white: #ffffff;
+    --color-sidebar: #111a2e;
+    --color-sidebar-raised: #18243d;
+    --color-chart-blue: #6f8fe8;
+    --color-chart-aqua: #64c3b6;
+    --color-chart-purple: #9a88d8;
 
     /* Semantic surfaces and text */
     --color-surface: #ffffff;
-    --color-surface-subtle: #f8fafb;
+    --color-surface-subtle: #f4f6f8;
     --color-surface-raised: #ffffff;
     --color-text: var(--color-foreground);
-    --color-text-secondary: #5f6573;
-    --color-text-muted: #858b98;
-    --color-border: #e5e8ed;
-    --color-border-strong: #d5d9e1;
-    --color-border-hover: #b9c0ca;
-    --color-divider: #edf0f3;
-    --color-danger: #b4233f;
-    --color-danger-hover: #961c34;
-    --color-danger-soft: rgba(180, 35, 63, 0.085);
-    --color-overlay: rgba(29, 30, 44, 0.38);
-    --color-primary-border: rgba(14, 121, 178, 0.14);
-    --color-primary-soft-hover: rgba(14, 121, 178, 0.12);
-    --color-success-border: rgba(0, 168, 120, 0.14);
-    --color-warning-border: rgba(113, 95, 0, 0.14);
-    --color-danger-border: rgba(180, 35, 63, 0.18);
-    --color-navbar: rgba(254, 253, 255, 0.96);
-    --color-skeleton: #f0f2f4;
-    --color-skeleton-highlight: #f8f9fa;
+    --color-text-secondary: #606a7b;
+    --color-text-muted: #8a94a6;
+    --color-border: #e7eaf0;
+    --color-border-strong: #d9dee8;
+    --color-border-hover: #bdc5d3;
+    --color-divider: #eef0f4;
+    --color-danger: #b95770;
+    --color-danger-hover: #9d4259;
+    --color-danger-soft: #fbecef;
+    --color-overlay: rgba(17, 26, 46, 0.42);
+    --color-primary-border: #d9e2ff;
+    --color-primary-soft-hover: #dee7ff;
+    --color-success-border: #d1eee9;
+    --color-warning-border: #e5ddf7;
+    --color-danger-border: #f4d7df;
+    --color-navbar: rgba(248, 249, 250, 0.9);
+    --color-skeleton: #eceff3;
+    --color-skeleton-highlight: #f7f8fa;
 
     /* Backwards-compatible aliases while legacy components are migrated */
     --color-primary-white: var(--color-surface);
@@ -50,8 +55,8 @@
     --color-status-brick: var(--color-danger);
 
     /* Typography */
-    --font-heading: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
     --font-body: 'Inter Variable', Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-heading: var(--font-body);
     --font-family: var(--font-body);
     --font-size-caption: 0.75rem;
     --font-size-small: 0.8125rem;
@@ -63,7 +68,7 @@
     --font-weight-regular: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
-    --font-weight-bold: 700;
+    --font-weight-bold: 650;
 
     /* 4 px spacing scale */
     --space-1: 4px;
@@ -89,13 +94,13 @@
     --radius-lg: 14px;
     --radius-xl: 16px;
     --radius-pill: 999px;
-    --shadow-xs: 0 1px 2px rgba(29, 30, 44, 0.035);
-    --shadow-sm: 0 1px 3px rgba(29, 30, 44, 0.055), 0 1px 2px rgba(29, 30, 44, 0.025);
-    --shadow-md: 0 12px 28px rgba(29, 30, 44, 0.075);
-    --shadow-dialog: 0 24px 64px rgba(29, 30, 44, 0.16);
-    --shadow-primary-sm: 0 1px 2px rgba(14, 121, 178, 0.18);
-    --shadow-primary-md: 0 4px 12px rgba(14, 121, 178, 0.2);
-    --shadow-mobile-nav: 0 -8px 28px rgba(29, 30, 44, 0.06);
+    --shadow-xs: 0 1px 2px rgba(24, 32, 51, 0.025);
+    --shadow-sm: 0 6px 20px rgba(24, 32, 51, 0.045);
+    --shadow-md: 0 14px 36px rgba(24, 32, 51, 0.07);
+    --shadow-dialog: 0 24px 64px rgba(17, 26, 46, 0.16);
+    --shadow-primary-sm: 0 3px 10px rgba(69, 103, 215, 0.14);
+    --shadow-primary-md: 0 8px 22px rgba(69, 103, 215, 0.18);
+    --shadow-mobile-nav: 0 -8px 28px rgba(17, 26, 46, 0.1);
 
     /* Motion */
     --duration-fast: 120ms;

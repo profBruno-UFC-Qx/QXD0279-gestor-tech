@@ -43,7 +43,6 @@ async function handleLogout(): Promise<void> {
                 <DropdownMenuLabel class="dropdown-label">
                     <strong>{{ displayName }}</strong>
                     <span>{{ displayEmail }}</span>
-                    <small>Autenticação simulada localmente</small>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator class="dropdown-separator" />
                 <DropdownMenuItem class="dropdown-item dropdown-item--danger" @select="handleLogout">

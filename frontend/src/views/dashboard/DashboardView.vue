@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import ActivityDistributionChart, { type DistributionItem } from '@/components/dashboard/ActivityDistributionChart.vue'
+import ActivityWorkloadChart from '@/components/dashboard/ActivityWorkloadChart.vue'
 import DashboardActivityList from '@/components/dashboard/DashboardActivityList.vue'
 import DashboardDeadlines from '@/components/dashboard/DashboardDeadlines.vue'
 import DashboardStats from '@/components/dashboard/DashboardStats.vue'
@@ -37,15 +38,15 @@ const metrics = computed(() => activities.value.length ? calculateProjectMetrics
 const canManage = computed(() => project.value?.gerenteId === authStore.user?.id || project.value?.papelAtual === 'GERENTE')
 
 const statusDistribution = computed<DistributionItem[]>(() => [
-    { label: 'A fazer', value: activities.value.filter((item) => item.status === 'A_FAZER').length, color: 'var(--color-text-muted)' },
-    { label: 'Em andamento', value: activities.value.filter((item) => item.status === 'EM_ANDAMENTO').length, color: 'var(--color-primary)' },
-    { label: 'Concluídas', value: activities.value.filter((item) => item.status === 'CONCLUIDA').length, color: 'var(--color-success)' },
+    { label: 'A fazer', value: activities.value.filter((item) => item.status === 'A_FAZER').length, color: 'var(--color-chart-blue)' },
+    { label: 'Em andamento', value: activities.value.filter((item) => item.status === 'EM_ANDAMENTO').length, color: 'var(--color-chart-purple)' },
+    { label: 'Concluídas', value: activities.value.filter((item) => item.status === 'CONCLUIDA').length, color: 'var(--color-chart-aqua)' },
 ])
 
 const priorityDistribution = computed<DistributionItem[]>(() => [
-    { label: 'Baixa', value: activities.value.filter((item) => item.prioridade === 'BAIXA').length, color: 'var(--color-success)' },
-    { label: 'Média', value: activities.value.filter((item) => item.prioridade === 'MEDIA').length, color: 'var(--color-warning)' },
-    { label: 'Alta', value: activities.value.filter((item) => item.prioridade === 'ALTA').length, color: 'var(--color-danger)' },
+    { label: 'Baixa', value: activities.value.filter((item) => item.prioridade === 'BAIXA').length, color: 'var(--color-chart-aqua)' },
+    { label: 'Média', value: activities.value.filter((item) => item.prioridade === 'MEDIA').length, color: 'var(--color-chart-blue)' },
+    { label: 'Alta', value: activities.value.filter((item) => item.prioridade === 'ALTA').length, color: 'var(--color-chart-purple)' },
 ])
 
 const relevantActivities = computed(() => [...activities.value]
@@ -110,14 +111,20 @@ onMounted(async () => {
             <div v-if="errorMessage" class="error-banner" role="alert">{{ errorMessage }}</div>
             <LoadingSkeleton v-if="isProjectLoading" variant="cards" :rows="5" />
             <template v-else>
-                <DashboardStats :metrics="metrics" />
-                <div class="charts-grid">
-                    <ActivityDistributionChart title="Distribuição por status" description="Atraso é tratado como condição de prazo." :items="statusDistribution" />
-                    <ActivityDistributionChart title="Distribuição por prioridade" description="Concentração das tarefas por nível." :items="priorityDistribution" />
-                    <DashboardDeadlines :activities="relevantActivities.slice(0, 5)" :project-id="project.id" />
-                </div>
+                <DashboardStats :metrics="metrics" :activities="activities" />
+                <section class="analytics-section" aria-labelledby="analytics-title">
+                    <header class="analytics-heading"><div><span>Análise visual</span><h2 id="analytics-title">Panorama das atividades</h2></div><p>Distribuição e carga de trabalho do projeto selecionado.</p></header>
+                    <div class="charts-grid">
+                        <ActivityDistributionChart title="Distribuição por status" description="Atraso é tratado como condição de prazo." :items="statusDistribution" />
+                        <ActivityDistributionChart title="Distribuição por prioridade" description="Concentração das tarefas por nível." :items="priorityDistribution" />
+                        <ActivityWorkloadChart :activities="activities" />
+                    </div>
+                </section>
                 <div class="dashboard-content">
-                    <DashboardActivityList :activities="relevantActivities" :project-id="project.id" />
+                    <div class="dashboard-main">
+                        <DashboardDeadlines :activities="relevantActivities.slice(0, 5)" :project-id="project.id" />
+                        <DashboardActivityList :activities="relevantActivities" :project-id="project.id" />
+                    </div>
                     <DashboardTeam :project="project" :members="members" :can-manage="canManage" />
                 </div>
             </template>
@@ -127,12 +134,20 @@ onMounted(async () => {
 
 <style scoped>
 .project-selector select { min-width: 220px; max-width: 320px; }
-.project-summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); align-items: center; gap: var(--space-6); padding: var(--space-4) var(--space-5); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); }
+.project-summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); align-items: center; gap: var(--space-6); padding: var(--space-4) var(--space-5); border: 1px solid rgba(231, 234, 240, .75); border-radius: var(--radius-xl); background: var(--color-surface); box-shadow: var(--shadow-xs); }
 .project-summary > div:first-child { display: flex; align-items: center; gap: var(--space-3); color: var(--color-text-secondary); font-size: var(--font-size-small); }
-.charts-grid { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, .85fr) minmax(320px, 1.3fr); gap: var(--space-4); }
+.analytics-section { display: grid; gap: var(--space-8); padding-block: var(--space-6); }
+.analytics-heading { display: flex; align-items: end; justify-content: space-between; gap: var(--space-6); padding-bottom: var(--space-4); border-bottom: 1px solid var(--color-divider); }
+.analytics-heading span { color: var(--color-primary); font-size: var(--font-size-caption); font-weight: var(--font-weight-bold); letter-spacing: .08em; text-transform: uppercase; }
+.analytics-heading h2 { margin-top: var(--space-1); font-size: 1.25rem; }
+.analytics-heading p { max-width: 420px; color: var(--color-text-secondary); font-size: var(--font-size-small); text-align: right; }
+.charts-grid { display: grid; grid-template-columns: minmax(300px, .9fr) minmax(300px, .9fr) minmax(360px, 1.2fr); gap: clamp(24px, 3vw, 44px); }
+.charts-grid > * + * { position: relative; }
+.charts-grid > * + *::before { position: absolute; top: 0; bottom: 0; left: calc(clamp(24px, 3vw, 44px) / -2); width: 1px; background: var(--color-divider); content: ''; }
 .dashboard-content { display: grid; align-items: start; grid-template-columns: minmax(0, 1fr) 290px; gap: var(--space-4); }
+.dashboard-main { display: grid; min-width: 0; gap: var(--space-4); }
 .primary-link { display: inline-flex; min-height: var(--control-height); align-items: center; padding: 10px 16px; border-radius: var(--radius-md); background: var(--color-primary); color: var(--color-white); font-weight: var(--font-weight-semibold); }
-@media (max-width: 1240px) { .charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .charts-grid > :last-child { grid-column: 1 / -1; } }
+@media (max-width: 1240px) { .charts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .charts-grid > :last-child { grid-column: 1 / -1; } .charts-grid > :last-child::before { display: none; } }
 @media (max-width: 1040px) { .dashboard-content { grid-template-columns: 1fr; } }
-@media (max-width: 760px) { .project-summary { grid-template-columns: 1fr; } .charts-grid { grid-template-columns: 1fr; } .charts-grid > :last-child { grid-column: auto; } .project-selector, .project-selector select { width: 100%; max-width: none; } }
+@media (max-width: 760px) { .project-summary { grid-template-columns: 1fr; } .analytics-heading { align-items: start; flex-direction: column; gap: var(--space-2); } .analytics-heading p { text-align: left; } .charts-grid { grid-template-columns: 1fr; } .charts-grid > :last-child { grid-column: auto; } .charts-grid > * + *::before { display: none; } .project-selector, .project-selector select { width: 100%; max-width: none; } }
 </style>

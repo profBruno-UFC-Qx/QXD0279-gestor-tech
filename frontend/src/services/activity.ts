@@ -1,5 +1,6 @@
 import type { Activity, ActivityPayload, ActivityStatus, ProjectMetrics } from '@/types/Activity'
 import { getAuthUser } from './auth.storage'
+import { appendProjectEvent } from './project-event'
 import {
     nextLocalId,
     readLocalDatabase,
@@ -54,6 +55,7 @@ export async function createActivity(projectId: number, data: ActivityPayload): 
     }
 
     database.activities.push(activity)
+    appendProjectEvent(database, projectId, 'activity-created', `criou a atividade “${activity.titulo}”.`)
     writeLocalDatabase(database)
     return hydrateActivity(activity, database)
 }
@@ -77,6 +79,7 @@ export async function updateActivity(
     }
 
     database.activities[activityIndex] = activity
+    appendProjectEvent(database, projectId, 'activity-updated', `atualizou a atividade “${activity.titulo}”.`)
     writeLocalDatabase(database)
     return hydrateActivity(activity, database)
 }
@@ -98,6 +101,12 @@ export async function updateActivityStatus(
     }
 
     database.activities[activityIndex] = activity
+    const statusLabels: Record<ActivityStatus, string> = {
+        A_FAZER: 'A fazer',
+        EM_ANDAMENTO: 'Em andamento',
+        CONCLUIDA: 'Concluída',
+    }
+    appendProjectEvent(database, projectId, 'activity-status', `moveu “${activity.titulo}” para ${statusLabels[status]}.`)
     writeLocalDatabase(database)
     return hydrateActivity(activity, database)
 }
@@ -109,7 +118,9 @@ export async function deleteActivity(projectId: number, activityId: number): Pro
     ))
     if (!exists) throw new Error('Atividade não encontrada.')
 
-    database.activities = database.activities.filter((activity) => activity.id !== activityId)
+    const activity = database.activities.find((item) => item.id === activityId)!
+    database.activities = database.activities.filter((item) => item.id !== activityId)
+    appendProjectEvent(database, projectId, 'activity-deleted', `removeu a atividade “${activity.titulo}”.`)
     writeLocalDatabase(database)
 }
 
