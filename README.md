@@ -24,7 +24,7 @@ Riscos, comentários, cronograma independente, relatórios avançados, notifica�
 │       ├── components/     # componentes visuais e navegação do projeto
 │       ├── layouts/        # áreas pública e autenticada
 │       ├── router/         # rotas públicas e protegidas
-│       ├── services/       # persistência e regras da simulação local
+│       ├── services/       # cliente HTTP e integração com a API REST
 │       ├── stores/         # sessão do usuário
 │       ├── types/          # Usuário, Projeto, MembroProjeto e Atividade
 │       ├── utils/          # rótulos e formatação
@@ -53,4 +53,4 @@ Para validar a versão de produção:
 npm run build
 ```
 
-Nesta etapa, o frontend é executável sem API. Autenticação, projetos, equipe e atividades são simulados e persistidos no `localStorage` do navegador. O diretório `backend/` continua reservado à implementação futura da API e não participa da execução atual.
+O frontend não contém dados de demonstração nem persistência local das entidades. Ele espera uma API REST configurada por `VITE_API_URL` (por padrão, `http://localhost:8080`); sem o backend, as telas públicas abrem normalmente e as operações exibem erro de conexão. O contrato esperado está documentado em [`backend/README.md`](backend/README.md).

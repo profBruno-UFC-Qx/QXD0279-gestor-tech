@@ -1,6 +1,6 @@
 # Estado atual do Gestor Tech
 
-> Retrato do repositório em 13 de outubro de 2026, na branch `developer`, considerando também as alterações locais ainda não versionadas.
+> Retrato do repositório em 10 de novembro de 2026, na branch `developer`, considerando também as alterações locais ainda não versionadas.
 
 ## Resumo executivo
 
@@ -12,7 +12,7 @@ O sistema ainda não funciona de ponta a ponta porque o backend não foi impleme
 |---|---|---|
 | Proposta e escopo | Definidos | O MVP e as regras de negócio estão descritos em `PROPOSTA.md`. |
 | Frontend | Implementado para o MVP | As telas, rotas, tipos, estado de autenticação e clientes HTTP estão presentes. |
-| Integração frontend/API | Preparada, não validada | Os serviços Axios existem, mas não há servidor local para responder às requisições. |
+| Integração frontend/API | Preparada, não validada | Os serviços HTTP existem, mas não há servidor local para responder às requisições. |
 | Backend | Não iniciado | Há apenas o contrato em `backend/README.md`; não existe projeto Strapi executável. |
 | Banco de dados | Não iniciado | Não há esquema, migrações, seed ou persistência configurada. |
 | Testes automatizados | Não iniciados | Não existem suítes nem comando `test` no `package.json`. |
@@ -39,7 +39,7 @@ Navegador
 Frontend Vue 3 + TypeScript
    ├── Vue Router: rotas públicas e autenticadas
    ├── Pinia: sessão do usuário
-   ├── Axios: acesso à API REST
+   ├── Fetch API: acesso à API REST
    └── localStorage: token e dados básicos do usuário
    │
    ▼
@@ -54,7 +54,7 @@ API REST configurada por VITE_API_URL
 - Vite 8;
 - Vue Router 5;
 - Pinia 4;
-- Axios 1.20;
+- Fetch API nativa do navegador;
 - Node.js `^22.18.0` ou `>=24.12.0`.
 
 O código está organizado em `components`, `layouts`, `router`, `services`, `stores`, `types`, `utils` e `views`. As páginas são carregadas sob demanda pelo roteador.
@@ -67,6 +67,7 @@ O código está organizado em `components`, `layouts`, `router`, `services`, `st
 - login com validação básica de e-mail e senha;
 - armazenamento do token e do usuário no `localStorage`;
 - inclusão automática do token Bearer nas requisições;
+- validação da sessão persistida por `GET /auth/me`;
 - logout com limpeza da sessão local;
 - proteção das rotas autenticadas pela presença do token.
 
@@ -134,6 +135,7 @@ Todas as requisições usam JSON e a URL base definida por `VITE_API_URL`, cujo 
 |---|---|---|
 | `POST` | `/auth/register` | Cadastrar e iniciar sessão. |
 | `POST` | `/auth/login` | Autenticar e iniciar sessão. |
+| `GET` | `/auth/me` | Validar a sessão e obter o usuário atual. |
 | `GET` | `/projects` | Listar projetos acessíveis. |
 | `POST` | `/projects` | Criar projeto. |
 | `GET` | `/projects/:id` | Obter projeto. |
@@ -147,6 +149,7 @@ Todas as requisições usam JSON e a URL base definida por `VITE_API_URL`, cujo 
 | `DELETE` | `/projects/:id/activities/:activityId` | Excluir atividade. |
 | `PATCH` | `/projects/:id/activities/:activityId/status` | Alterar status da atividade. |
 | `GET` | `/activities/mine` | Listar atividades do usuário atual. |
+| `GET` | `/projects/:id/events` | Listar o histórico do projeto. |
 
 O backend deverá devolver no login e no cadastro um objeto `{ token, user }` e aplicar no servidor todas as regras de participação e autorização. Ocultar botões no frontend não substitui essa validação.
 
@@ -178,8 +181,7 @@ Não foi possível validar fluxos reais no navegador porque não existe backend 
 
 - o produto não é executável de ponta a ponta sem a API;
 - as regras de autorização existem principalmente como comportamento visual e contrato; precisam ser impostas pelo backend;
-- o guard de navegação verifica somente se há um token local, sem validar expiração ou autenticidade;
-- não há tratamento global de respostas `401`, renovação de token ou expiração de sessão;
+- não há renovação automática de token; a API deve devolver `401` quando a sessão expirar;
 - o token é mantido em `localStorage`, decisão que deve ser reavaliada conforme o modelo de segurança do backend;
 - o contrato de respostas e erros ainda precisa ser confirmado na integração real;
 - não há testes unitários, de componentes, integração ou ponta a ponta;

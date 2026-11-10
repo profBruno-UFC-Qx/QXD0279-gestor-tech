@@ -1,6 +1,6 @@
 # Frontend — Gestor Tech
 
-Interface Vue 3 do Gestor Tech, redesenhada como um workspace SaaS minimalista para projetos, equipes e atividades. O frontend funciona de forma independente nesta etapa: autenticação, dados e operações são simulados e persistidos no `localStorage` do navegador.
+Interface Vue 3 do Gestor Tech, desenhada como um workspace SaaS minimalista para projetos, equipes e atividades. O frontend consome uma API REST e não contém dados mockados nem persistência local de projetos, membros ou atividades. Somente a sessão autenticada é mantida no `localStorage`.
 
 ## Tecnologias
 
@@ -25,9 +25,28 @@ npm install
 npm run dev
 ```
 
-O Vite exibirá a URL local, normalmente `http://localhost:5173`.
+Copie o arquivo de ambiente e ajuste a origem do backend se necessário:
 
-Não é necessário criar `.env` nem iniciar o backend. Para limpar todos os dados simulados, remova no navegador as chaves `gestor-tech:local-database:v1`, `token` e `user` do `localStorage`.
+```bash
+cp .env.example .env
+```
+
+No PowerShell, o equivalente é `Copy-Item .env.example .env`. O Vite exibirá a aplicação normalmente em `http://localhost:5173`.
+
+`VITE_API_URL` define a URL base da API e usa `http://localhost:8080` quando omitida. `VITE_API_TIMEOUT_MS` controla o timeout das requisições e usa 15 segundos por padrão. O backend deve liberar a origem do frontend via CORS.
+
+## Integração com a API
+
+O cliente em `src/services/api.ts` centraliza:
+
+- cabeçalhos JSON e `Authorization: Bearer <token>`;
+- timeout e mensagens para indisponibilidade da API;
+- leitura das mensagens de erro retornadas pelo backend;
+- limpeza da sessão ao receber `401 Unauthorized`.
+
+Login e cadastro só criam uma sessão quando a API devolve `{ token, user }`. Em uma recarga, o guard das rotas protegidas valida a sessão por `GET /auth/me`. As antigas chaves da simulação local são removidas na inicialização para impedir que o token fixo de desenvolvimento continue liberando acesso.
+
+Os serviços esperam respostas JSON diretas, sem envelope `data`. O contrato completo de endpoints e campos está em `../backend/README.md`.
 
 ## Design system
 
@@ -60,8 +79,8 @@ Entre os padrões compartilhados estão `PageHeader`, `StatCard`, `StatusBadge`,
 
 | Rota | Finalidade |
 |---|---|
-| `/login` | autenticação simulada |
-| `/cadastro` | criação de conta simulada |
+| `/login` | autenticação pela API |
+| `/cadastro` | criação de conta pela API |
 | `/dashboard` | seleção de projeto, KPIs, gráficos, prazos e equipe |
 | `/projetos` | busca, filtros e listagem de projetos |
 | `/projetos/novo` | criação de projeto |
@@ -80,7 +99,7 @@ Entre os padrões compartilhados estão `PageHeader`, `StatCard`, `StatusBadge`,
 - progresso é calculado por atividades concluídas sobre o total;
 - remover um membro limpa suas atribuições nas atividades do projeto.
 
-Essas regras simulam a experiência no cliente. Elas ainda precisarão ser validadas no servidor quando uma API real for integrada. A interface não deve ser interpretada como uma camada de autorização segura.
+Essas regras orientam a experiência no cliente, mas também precisam ser impostas pelo backend. Ocultar uma ação na interface não constitui uma camada de autorização segura.
 
 ## Responsividade e acessibilidade
 

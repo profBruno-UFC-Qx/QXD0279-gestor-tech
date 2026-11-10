@@ -1,28 +1,20 @@
-import type { AuthResponse, LoginRequest, RegisterRequest } from '@/types/Auth'
-import { saveLocalUser } from './local-database'
-
-function createLocalSession(email: string, nome: string): AuthResponse {
-    const user = {
-        id: 1,
-        nome,
-        email,
-    }
-
-    saveLocalUser(user)
-
-    return {
-        token: 'local-development-session',
-        user,
-    }
-}
+import type { AuthResponse, LoginRequest, RegisterRequest, User } from '@/types/Auth'
+import { apiRequest } from './api'
 
 export async function login(data: LoginRequest): Promise<AuthResponse> {
-    const email = data.email.trim()
-    const nameFromEmail = email.split('@')[0]?.trim() ?? ''
-
-    return createLocalSession(email, nameFromEmail || 'Usuário')
+    return apiRequest<AuthResponse>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
 }
 
 export async function register(data: RegisterRequest): Promise<AuthResponse> {
-    return createLocalSession(data.email.trim(), data.nome.trim())
+    return apiRequest<AuthResponse>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    })
+}
+
+export async function getCurrentUser(): Promise<User> {
+    return apiRequest<User>('/auth/me')
 }

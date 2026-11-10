@@ -20,7 +20,7 @@ withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
 const authStore = useAuthStore()
 const router = useRouter()
 const displayName = computed(() => authStore.user?.nome ?? 'Usuário')
-const displayEmail = computed(() => authStore.user?.email ?? 'Sessão local')
+const displayEmail = computed(() => authStore.user?.email ?? 'Sessão indisponível')
 
 async function handleLogout(): Promise<void> {
     authStore.logout()

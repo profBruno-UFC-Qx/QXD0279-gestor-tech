@@ -1,10 +1,13 @@
 import type { NavigationGuard } from 'vue-router'
 
-import { getAuthToken } from '@/services/auth.storage'
+import { useAuthStore } from '@/stores/auth.store'
 
-export const authGuard: NavigationGuard = () => {
-    if (!getAuthToken()) {
-        return { name: 'login' }
+export const authGuard: NavigationGuard = async (to) => {
+    const authStore = useAuthStore()
+    const hasValidSession = await authStore.restoreSession()
+
+    if (!hasValidSession) {
+        return { name: 'login', query: { redirect: to.fullPath } }
     }
 
     return true

@@ -93,8 +93,13 @@ onMounted(async () => {
 <template>
     <section class="dashboard-page page-stack">
         <LoadingSkeleton v-if="isLoading" variant="cards" :rows="5" />
-        <EmptyState v-else-if="!projects.length" icon="projects" title="Seu dashboard começa com um projeto" description="Crie o primeiro projeto para acompanhar atividades, prazos e progresso.">
-            <template #actions><router-link class="primary-link" :to="{ name: 'project-create' }">Criar projeto</router-link></template>
+        <EmptyState
+            v-else-if="!projects.length"
+            :icon="errorMessage ? 'alert-triangle' : 'projects'"
+            :title="errorMessage ? 'Dashboard indisponível' : 'Seu dashboard começa com um projeto'"
+            :description="errorMessage || 'Crie o primeiro projeto para acompanhar atividades, prazos e progresso.'"
+        >
+            <template v-if="!errorMessage" #actions><router-link class="primary-link" :to="{ name: 'project-create' }">Criar projeto</router-link></template>
         </EmptyState>
         <template v-else-if="project">
             <PageHeader eyebrow="Visão geral" :title="project.nome" description="Acompanhe o ritmo da equipe e os principais sinais da entrega.">

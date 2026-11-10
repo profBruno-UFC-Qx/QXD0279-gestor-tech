@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import AppIcon from '@/components/ui/AppIcon.vue'
@@ -15,6 +15,7 @@ const isLoading = ref(false)
 const formError = ref('')
 const fieldErrors = reactive({ email: '', password: '' })
 const authStore = useAuthStore()
+const route = useRoute()
 const router = useRouter()
 
 function validateForm(): boolean {
@@ -30,7 +31,10 @@ async function handleLogin(): Promise<void> {
     try {
         await authStore.login({ email: email.value.trim(), senha: password.value })
         toast.success('Sessão iniciada', { description: 'Bem-vindo ao Gestor Tech.' })
-        await router.push({ name: 'dashboard' })
+        const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+            ? route.query.redirect
+            : '/dashboard'
+        await router.push(redirect)
     } catch (error: unknown) {
         formError.value = getErrorMessage(error, 'Não foi possível iniciar a sessão.')
     } finally {
