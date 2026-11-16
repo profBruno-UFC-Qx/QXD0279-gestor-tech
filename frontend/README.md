@@ -1,6 +1,6 @@
 # Frontend — Gestor Tech
 
-Interface Vue 3 do Gestor Tech, desenhada como um workspace SaaS minimalista para projetos, equipes e atividades. O frontend consome uma API REST e não contém dados mockados nem persistência local de projetos, membros ou atividades. Somente a sessão autenticada é mantida no `localStorage`.
+Interface Vue 3 do Gestor Tech, desenhada como um workspace SaaS minimalista para projetos, equipes e atividades. O frontend está integrado à API REST Express do repositório e não contém dados mockados nem persistência local de projetos, membros ou atividades. Somente a sessão autenticada é mantida no `localStorage`.
 
 ## Tecnologias
 
@@ -11,6 +11,7 @@ Interface Vue 3 do Gestor Tech, desenhada como um workspace SaaS minimalista par
 - Lucide (`@lucide/vue`) para iconografia consistente;
 - Vue Sonner para notificações de sucesso e erro;
 - Fontsource para servir Inter e Plus Jakarta Sans localmente.
+- Vitest para testar as regras dos indicadores.
 
 O projeto não utiliza Tailwind CSS. Os tokens e componentes já existentes eram baseados em CSS escopado; o redesign preservou essa arquitetura e centralizou o design system em custom properties, evitando introduzir uma migração estrutural sem benefício funcional.
 
@@ -97,9 +98,9 @@ Entre os padrões compartilhados estão `PageHeader`, `StatCard`, `StatusBadge`,
 - o gerente ou o responsável pode atualizar o status de uma atividade;
 - atraso é uma condição derivada do prazo e não um status;
 - progresso é calculado por atividades concluídas sobre o total;
-- remover um membro limpa suas atribuições nas atividades do projeto.
+- a remoção de um membro é bloqueada até que suas atividades sejam reatribuídas ou fiquem sem responsável.
 
-Essas regras orientam a experiência no cliente, mas também precisam ser impostas pelo backend. Ocultar uma ação na interface não constitui uma camada de autorização segura.
+Essas regras orientam a experiência no cliente e são impostas novamente pelo backend. Ocultar uma ação na interface não constitui uma camada de autorização segura.
 
 ## Responsividade e acessibilidade
 
@@ -114,8 +115,9 @@ Essas regras orientam a experiência no cliente, mas também precisam ser impost
 
 ```bash
 npm run type-check
+npm test
 npm run build
 npm audit --audit-level=high
 ```
 
-`npm run build` executa o typecheck antes de gerar o bundle em `dist/`. Não há lint ou testes automatizados configurados neste repositório.
+`npm test` valida projeto vazio, totais, percentual e as condições de atraso. `npm run build` executa o typecheck antes de gerar o bundle em `dist/`. Não há lint configurado neste repositório.

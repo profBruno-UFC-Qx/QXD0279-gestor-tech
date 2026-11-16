@@ -31,6 +31,7 @@ export function getAuthUser(): User | null {
             && typeof (user as Partial<User>).id === 'number'
             && typeof (user as Partial<User>).nome === 'string'
             && typeof (user as Partial<User>).email === 'string'
+            && ((user as Partial<User>).role === 'ADMIN' || (user as Partial<User>).role === 'USER')
         ) {
             return user as User
         }

@@ -308,7 +308,7 @@ async function confirmDelete(): Promise<void> {
             <template #footer><BaseButton variant="secondary" @click="closeForm">Cancelar</BaseButton><BaseButton type="submit" form="activity-form" :loading="isSaving">{{ editingId ? 'Salvar alterações' : 'Criar atividade' }}</BaseButton></template>
         </AppSheet>
 
-        <ConfirmDialog :open="Boolean(activityToDelete)" title="Excluir atividade?" :description="activityToDelete ? `A atividade “${activityToDelete.titulo}” será removida permanentemente deste navegador.` : ''" confirm-label="Excluir atividade" danger :busy="isDeleting" @update:open="!$event && (activityToDelete = null)" @confirm="confirmDelete" />
+        <ConfirmDialog :open="Boolean(activityToDelete)" title="Excluir atividade?" :description="activityToDelete ? `A atividade “${activityToDelete.titulo}” será removida permanentemente do projeto.` : ''" confirm-label="Excluir atividade" danger :busy="isDeleting" @update:open="!$event && (activityToDelete = null)" @confirm="confirmDelete" />
     </section>
 </template>
 

@@ -1,56 +1,91 @@
 # Gestor Tech
 
-Aplicação web para pequenas equipes organizarem projetos, participantes e atividades. A estrutura do repositório segue o MVP descrito em [`PROPOSTA.md`](PROPOSTA.md): autenticação, projetos, equipe, atividades e acompanhamento básico.
+Aplicação web para pequenas equipes organizarem projetos, participantes e atividades. O MVP descrito em [`PROPOSTA.md`](PROPOSTA.md) está integrado de ponta a ponta: uma conta cria um projeto, adiciona outra conta, atribui uma atividade e acompanha no dashboard a conclusão feita pelo responsável.
 
-O retrato consolidado do que está implementado, validado e ainda pendente está em [`ESTADO_ATUAL.md`](ESTADO_ATUAL.md).
+Os dados são persistidos em SQLite pelo backend. O frontend não usa mocks nem armazenamento local para projetos, equipes ou atividades; o `localStorage` guarda somente a sessão JWT.
 
-## Escopo do MVP
+## Tecnologias
 
-- cadastro, login e logout;
-- criação e edição de projetos;
-- inclusão e remoção de membros;
-- criação, edição e exclusão de atividades;
-- atualização do status pelo responsável;
-- indicadores de total, concluídas, pendentes, atrasadas e percentual de conclusão.
+- frontend: Vue 3, TypeScript, Vite, Vue Router e Pinia;
+- backend: Express, TypeScript, TypeORM, SQLite (`better-sqlite3`), JWT, bcrypt e Zod;
+- testes: Node Test Runner no backend e Vitest no frontend;
+- integração contínua: GitHub Actions para tipos, testes e builds, além dos checks acadêmicos existentes.
 
-Riscos, comentários, cronograma independente, relatórios avançados, notificações e anexos não fazem parte desta versão.
+## Requisitos
 
-## Estrutura
+- Node.js `^22.18.0` ou `>=24.12.0`;
+- npm.
 
-```text
-.
-├── frontend/
-│   └── src/
-│       ├── components/     # componentes visuais e navegação do projeto
-│       ├── layouts/        # áreas pública e autenticada
-│       ├── router/         # rotas públicas e protegidas
-│       ├── services/       # cliente HTTP e integração com a API REST
-│       ├── stores/         # sessão do usuário
-│       ├── types/          # Usuário, Projeto, MembroProjeto e Atividade
-│       ├── utils/          # rótulos e formatação
-│       └── views/          # autenticação, projetos e atividades
-├── backend/                # espaço reservado para a API Strapi
-├── ESTADO_ATUAL.md
-├── PROPOSTA.md
-└── ENTREGA.md
+## Executando localmente
+
+Prepare o backend no primeiro terminal:
+
+```powershell
+cd backend
+npm install
+Copy-Item .env.example .env
+npm run db:init
+npm run dev
 ```
 
-O papel do usuário é contextual: ele pode ser gerente de um projeto e membro de outro. Por isso, não existe um campo global de perfil no tipo `User`; as permissões são verificadas com base no projeto atual.
+No Bash, substitua `Copy-Item .env.example .env` por `cp .env.example .env`.
 
-## Executando o frontend
+A API será iniciada em `http://localhost:8080` e usará, por padrão, `backend/data/gestor-tech.sqlite`. O TypeORM cria e sincroniza as tabelas na primeira execução sem apagar os dados existentes.
 
-Requisitos: Node.js `^22.18.0` ou `>=24.12.0` e npm.
+Inicie o frontend em outro terminal:
 
-```bash
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-Para validar a versão de produção:
+Abra a URL exibida pelo Vite, normalmente `http://localhost:5173`.
 
-```bash
+## Demonstração com duas contas
+
+1. Em uma janela normal, cadastre `gerente.demo@example.com` e crie um projeto.
+2. Em uma janela anônima ou outro navegador, cadastre `membro.demo@example.com`.
+3. Volte à conta gerente, abra **Equipe** e adicione `membro.demo@example.com`.
+4. Abra **Atividades**, crie uma atividade e selecione a segunda conta como responsável.
+5. Na segunda janela, abra **Minhas atividades** e marque a atividade como concluída.
+6. Na conta gerente, recarregue o dashboard: total, concluídas, pendentes, atrasadas e percentual de conclusão serão recalculados com todas as atividades do projeto.
+7. Recarregue ambas as páginas ou reinicie o backend para confirmar que projeto, vínculo e atividade continuam no SQLite.
+
+Os papéis são contextuais. A mesma conta pode ser gerente de um projeto e membro de outro. Os papéis globais `ADMIN` e `USER` são preservados na autenticação, mas `ADMIN` não recebe acesso automático a projetos de terceiros.
+
+## Verificações
+
+Backend:
+
+```powershell
+cd backend
+npm run type-check
+npm test
 npm run build
 ```
 
-O frontend não contém dados de demonstração nem persistência local das entidades. Ele espera uma API REST configurada por `VITE_API_URL` (por padrão, `http://localhost:8080`); sem o backend, as telas públicas abrem normalmente e as operações exibem erro de conexão. O contrato esperado está documentado em [`backend/README.md`](backend/README.md).
+Frontend:
+
+```powershell
+cd frontend
+npm run type-check
+npm test
+npm run build
+```
+
+Os testes de integração do backend usam um arquivo SQLite temporário e isolado. O teste percorre autenticação, projeto, equipe, atividades, permissões, conclusão pela segunda conta e reabertura da conexão para validar persistência. Os testes do frontend validam as regras dos indicadores do dashboard.
+
+## Estrutura
+
+```text
+.
+├── frontend/              # interface Vue e clientes da API REST
+├── backend/               # API Express, regras de acesso e SQLite
+├── .github/workflows/     # checks acadêmicos e qualidade do MVP
+├── ESTADO_ATUAL.md        # retrato técnico e decisões
+├── PROPOSTA.md            # escopo do produto
+└── ENTREGA.md             # roteiro e matriz da entrega
+```
+
+Consulte [`backend/README.md`](backend/README.md) para o contrato REST, regras de autorização e configuração do banco.

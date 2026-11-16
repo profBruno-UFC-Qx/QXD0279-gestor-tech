@@ -1,0 +1,40 @@
+{
+  "name": "gestor-tech-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "npm run build && node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "type-check": "tsc --noEmit",
+    "pretest": "npm run build --silent",
+    "test": "node --test tests/integration.test.cjs",
+    "predb:init": "npm run build --silent",
+    "db:init": "node dist/scripts/init-database.js",
+    "predb:info": "npm run build --silent",
+    "db:info": "node dist/scripts/database-info.js"
+  },
+  "engines": {
+    "node": "^22.18.0 || >=24.12.0"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.31",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.6",
+    "typescript": "^6.0.3"
+  }
+}

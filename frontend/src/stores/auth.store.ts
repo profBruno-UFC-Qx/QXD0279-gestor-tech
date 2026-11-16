@@ -18,7 +18,8 @@ function isUser(value: unknown): value is User {
         && typeof value === 'object'
         && typeof (value as Partial<User>).id === 'number'
         && typeof (value as Partial<User>).nome === 'string'
-        && typeof (value as Partial<User>).email === 'string',
+        && typeof (value as Partial<User>).email === 'string'
+        && ((value as Partial<User>).role === 'ADMIN' || (value as Partial<User>).role === 'USER'),
     )
 }
 

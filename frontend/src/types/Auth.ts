@@ -2,6 +2,7 @@ export interface User {
     id: number
     nome: string
     email: string
+    role: 'ADMIN' | 'USER'
 }
 
 export interface LoginRequest {

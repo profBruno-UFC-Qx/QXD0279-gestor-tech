@@ -89,11 +89,11 @@ async function handleAddMember(): Promise<void> {
 async function confirmRemoveMember(): Promise<void> {
     if (!memberToRemove.value) return
     isRemoving.value = true
+    errorMessage.value = ''
     try {
         const removed = memberToRemove.value
         await removeProjectMember(projectId, removed.id)
         members.value = members.value.filter((item) => item.id !== removed.id)
-        activities.value = activities.value.map((activity) => activity.responsavelId === removed.usuarioId ? { ...activity, responsavelId: null, responsavel: null } : activity)
         memberToRemove.value = null
         toast.success('Membro removido', { description: `${removed.usuario.nome} foi removido da equipe.` })
     } catch (error: unknown) {
@@ -138,7 +138,7 @@ async function confirmRemoveMember(): Promise<void> {
         </template>
         <EmptyState v-else icon="alert-triangle" title="Equipe indisponível" :description="errorMessage || 'Não foi possível encontrar este projeto.'" />
 
-        <ConfirmDialog :open="Boolean(memberToRemove)" title="Remover membro da equipe?" :description="memberToRemove ? `${memberToRemove.usuario.nome} perderá o acesso ao projeto e ficará sem atribuição nas atividades atuais.` : ''" confirm-label="Remover membro" danger :busy="isRemoving" @update:open="!$event && (memberToRemove = null)" @confirm="confirmRemoveMember" />
+        <ConfirmDialog :open="Boolean(memberToRemove)" title="Remover membro da equipe?" :description="memberToRemove ? `${memberToRemove.usuario.nome} perderá o acesso ao projeto. Se houver atividades atribuídas, reatribua-as ou deixe-as sem responsável antes de remover.` : ''" confirm-label="Remover membro" danger :busy="isRemoving" @update:open="!$event && (memberToRemove = null)" @confirm="confirmRemoveMember" />
     </section>
 </template>
 
