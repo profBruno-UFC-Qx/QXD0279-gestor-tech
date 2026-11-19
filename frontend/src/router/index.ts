@@ -84,7 +84,7 @@ const router = createRouter({
                 {
                     path: 'minhas-atividades',
                     name: 'my-activities',
-                    meta: { title: 'Minhas atividades', breadcrumbs: ['Gestor Tech', 'Minhas atividades'] },
+                    meta: { title: 'Kanban', breadcrumbs: ['Gestor Tech', 'Kanban'] },
                     component: () => import('@/views/activities/MyActivitiesView.vue'),
                 },
             ],

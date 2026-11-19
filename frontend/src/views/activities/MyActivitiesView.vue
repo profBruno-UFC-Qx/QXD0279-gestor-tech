@@ -17,21 +17,24 @@ import EmptyState from '@/components/ui/EmptyState.vue'
 import FilterBar from '@/components/ui/FilterBar.vue'
 import LoadingSkeleton from '@/components/ui/LoadingSkeleton.vue'
 import SearchInput from '@/components/ui/SearchInput.vue'
-import { listMyActivities, updateActivityStatus } from '@/services/activity'
+import { listKanbanData, updateActivityStatus } from '@/services/activity'
 import { getErrorMessage } from '@/services/errors'
 import type { Activity, ActivityPriority, ActivityStatus } from '@/types/Activity'
+import type { Project } from '@/types/Project'
 import type { IconName } from '@/types/Ui'
 import { isActivityOverdue } from '@/utils/activities'
 import { activityStatusLabels, formatDate, priorityLabels } from '@/utils/labels'
 
 const router = useRouter()
 const activities = ref<Activity[]>([])
+const projects = ref<Project[]>([])
 const isLoading = ref(true)
 const errorMessage = ref('')
 const search = ref('')
+const projectFilter = ref<number | 'TODOS'>('TODOS')
 const statusFilter = ref<'TODOS' | ActivityStatus>('TODOS')
 const priorityFilter = ref<'TODAS' | ActivityPriority>('TODAS')
-const viewMode = ref<'list' | 'kanban'>('list')
+const viewMode = ref<'list' | 'kanban'>('kanban')
 const draggedActivityId = ref<number | null>(null)
 const dragOverStatus = ref<ActivityStatus | null>(null)
 
@@ -45,17 +48,20 @@ const filteredActivities = computed(() => {
     const term = search.value.trim().toLocaleLowerCase('pt-BR')
     return activities.value.filter((activity) => {
         const matchesSearch = !term || `${activity.titulo} ${activity.descricao} ${activity.projeto?.nome ?? ''}`.toLocaleLowerCase('pt-BR').includes(term)
+        const matchesProject = projectFilter.value === 'TODOS' || activity.projetoId === projectFilter.value
         const matchesStatus = statusFilter.value === 'TODOS' || activity.status === statusFilter.value
         const matchesPriority = priorityFilter.value === 'TODAS' || activity.prioridade === priorityFilter.value
-        return matchesSearch && matchesStatus && matchesPriority
+        return matchesSearch && matchesProject && matchesStatus && matchesPriority
     })
 })
 
 onMounted(async () => {
     try {
-        activities.value = await listMyActivities()
+        const data = await listKanbanData()
+        projects.value = data.projects
+        activities.value = data.activities
     } catch (error: unknown) {
-        errorMessage.value = getErrorMessage(error, 'Não foi possível carregar suas atividades.')
+        errorMessage.value = getErrorMessage(error, 'Não foi possível carregar o Kanban.')
     } finally {
         isLoading.value = false
     }
@@ -115,16 +121,17 @@ async function dropActivity(status: ActivityStatus): Promise<void> {
     <section class="activities-page page-stack">
         <header class="page-heading">
             <span class="eyebrow">Meu trabalho</span>
-            <div class="title-row"><h1>Minhas atividades</h1><span class="total-badge" :aria-label="`${activities.length} atividades`">{{ activities.length }}</span></div>
-            <p>Atividades atribuídas a você em todos os projetos.</p>
+            <div class="title-row"><h1>Kanban</h1><span class="total-badge" :aria-label="`${filteredActivities.length} atividades`">{{ filteredActivities.length }}</span></div>
+            <p>Acompanhe as atividades por status nos projetos acessíveis a você.</p>
         </header>
 
         <LoadingSkeleton v-if="isLoading" variant="table" />
         <div v-else-if="errorMessage" class="error-banner" role="alert">{{ errorMessage }}</div>
         <template v-else>
-            <FilterBar v-if="activities.length" class="control-bar">
-                <SearchInput v-model="search" placeholder="Pesquisar por atividade ou projeto" label="Buscar minhas atividades" shortcut="Ctrl K" />
+            <FilterBar v-if="projects.length || activities.length" class="control-bar">
+                <SearchInput v-model="search" placeholder="Pesquisar por atividade ou projeto" label="Buscar atividades" shortcut="Ctrl K" />
                 <template #filters>
+                    <label><span class="sr-only">Filtrar por projeto</span><select v-model="projectFilter"><option value="TODOS">Todos os projetos</option><option v-for="project in projects" :key="project.id" :value="project.id">{{ project.nome }}</option></select></label>
                     <label><span class="sr-only">Filtrar por status</span><select v-model="statusFilter"><option value="TODOS">Todos os status</option><option value="A_FAZER">A fazer</option><option value="EM_ANDAMENTO">Em andamento</option><option value="CONCLUIDA">Concluída</option></select></label>
                     <label><span class="sr-only">Filtrar por prioridade</span><select v-model="priorityFilter"><option value="TODAS">Todas as prioridades</option><option value="ALTA">Alta</option><option value="MEDIA">Média</option><option value="BAIXA">Baixa</option></select></label>
                 </template>
@@ -136,10 +143,10 @@ async function dropActivity(status: ActivityStatus): Promise<void> {
                 </template>
             </FilterBar>
 
-            <EmptyState v-if="!filteredActivities.length" :icon="activities.length ? 'search' : 'activities'" :title="activities.length ? 'Nenhuma atividade encontrada' : 'Você não possui atividades atribuídas'" :description="activities.length ? 'Ajuste a pesquisa ou os filtros para encontrar outras atividades.' : 'Quando uma atividade for atribuída a você, ela aparecerá aqui.'" />
+            <EmptyState v-if="!filteredActivities.length" :icon="activities.length ? 'search' : 'activities'" :title="activities.length ? 'Nenhuma atividade encontrada' : 'Nenhuma atividade disponível'" :description="activities.length ? 'Ajuste a pesquisa ou os filtros para encontrar outras atividades.' : 'Não há atividades para exibir nos projetos aos quais você tem acesso.'" />
 
-            <AppDataTable v-else-if="viewMode === 'list'" label="Minhas atividades">
-                <template #header><div class="list-heading"><div><h2>Atividades atribuídas</h2><p>{{ filteredActivities.length }} de {{ activities.length }} exibidas</p></div><span>{{ filteredActivities.length }} {{ filteredActivities.length === 1 ? 'tarefa' : 'tarefas' }}</span></div></template>
+            <AppDataTable v-else-if="viewMode === 'list'" label="Atividades">
+                <template #header><div class="list-heading"><div><h2>Atividades</h2><p>{{ filteredActivities.length }} de {{ activities.length }} exibidas</p></div><span>{{ filteredActivities.length }} {{ filteredActivities.length === 1 ? 'tarefa' : 'tarefas' }}</span></div></template>
                 <template #default>
                     <thead><tr><th>Atividade</th><th>Projeto</th><th>Prioridade</th><th>Prazo</th><th>Status</th><th><span class="sr-only">Ações</span></th></tr></thead>
                     <tbody>
@@ -155,7 +162,7 @@ async function dropActivity(status: ActivityStatus): Promise<void> {
                 </template>
             </AppDataTable>
 
-            <section v-else class="kanban-board" aria-label="Quadro Kanban das minhas atividades">
+            <section v-else class="kanban-board" aria-label="Quadro Kanban das atividades">
                 <article v-for="column in kanbanColumns" :key="column.status" class="kanban-column" :class="{ 'kanban-column--over': dragOverStatus === column.status }" @dragover.prevent="dragOverStatus = column.status" @dragleave.self="dragOverStatus = null" @drop.prevent="dropActivity(column.status)">
                     <header><div><span class="column-dot" :class="`column-dot--${column.status.toLowerCase()}`" /><h2>{{ column.label }}</h2></div><strong>{{ activitiesForStatus(column.status).length }}</strong></header>
                     <div class="kanban-list">

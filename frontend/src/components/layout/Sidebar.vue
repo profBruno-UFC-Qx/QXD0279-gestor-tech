@@ -11,7 +11,7 @@ const route = useRoute()
 const menuItems: Array<{ label: string; icon: IconName; name: string }> = [
     { label: 'Dashboard', icon: 'dashboard', name: 'dashboard' },
     { label: 'Projetos', icon: 'projects', name: 'projects' },
-    { label: 'Atividades', icon: 'activities', name: 'my-activities' },
+    { label: 'Kanban', icon: 'activities', name: 'my-activities' },
 ]
 
 const currentName = computed(() => String(route.name ?? ''))

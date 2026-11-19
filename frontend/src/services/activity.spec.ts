@@ -1,8 +1,14 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Activity, ActivityStatus } from '@/types/Activity'
+import type { Project } from '@/types/Project'
 import { isActivityOverdue } from '@/utils/activities'
-import { calculateProjectMetrics } from './activity'
+import { apiRequest } from './api'
+import { calculateProjectMetrics, listKanbanData } from './activity'
+import { listProjects } from './project'
+
+vi.mock('./api', () => ({ apiRequest: vi.fn() }))
+vi.mock('./project', () => ({ listProjects: vi.fn() }))
 
 function activity(id: number, prazo: string, status: ActivityStatus): Activity {
     return {
@@ -28,6 +34,53 @@ describe('indicadores do projeto', () => {
             pendentes: 0,
             atrasadas: 0,
             percentualConclusao: 0,
+        })
+    })
+
+    describe('dados do Kanban', () => {
+        beforeEach(() => {
+            vi.resetAllMocks()
+        })
+
+        it('combina as atividades atribuídas ao usuário com todas as atividades dos projetos que gerencia', async () => {
+            const projects: Project[] = [
+                {
+                    id: 1,
+                    nome: 'Projeto gerenciado',
+                    descricao: '',
+                    dataInicio: '2026-01-01',
+                    dataFim: '2026-12-31',
+                    status: 'EM_ANDAMENTO',
+                    gerenteId: 10,
+                    papelAtual: 'GERENTE',
+                },
+                {
+                    id: 2,
+                    nome: 'Projeto de membro',
+                    descricao: '',
+                    dataInicio: '2026-01-01',
+                    dataFim: '2026-12-31',
+                    status: 'EM_ANDAMENTO',
+                    gerenteId: 20,
+                    papelAtual: 'MEMBRO',
+                },
+            ]
+            const assignedToMe = { ...activity(1, '2026-11-20', 'A_FAZER'), projetoId: 2, responsavelId: 10 }
+            const assignedToSomeoneElse = { ...activity(2, '2026-11-21', 'EM_ANDAMENTO'), responsavelId: 30 }
+            const managedActivity = { ...activity(3, '2026-11-22', 'A_FAZER'), responsavelId: 30 }
+
+            vi.mocked(listProjects).mockResolvedValue(projects)
+            vi.mocked(apiRequest)
+                .mockResolvedValueOnce([assignedToMe])
+                .mockResolvedValueOnce([assignedToSomeoneElse, managedActivity])
+
+            const result = await listKanbanData()
+
+            expect(result.projects).toEqual(projects)
+            expect(result.activities).toHaveLength(3)
+            expect(result.activities.find((item) => item.id === 1)?.projeto?.nome).toBe('Projeto de membro')
+            expect(result.activities.find((item) => item.id === 2)?.projeto?.nome).toBe('Projeto gerenciado')
+            expect(result.activities.find((item) => item.id === 3)?.projeto?.nome).toBe('Projeto gerenciado')
         })
     })
 
